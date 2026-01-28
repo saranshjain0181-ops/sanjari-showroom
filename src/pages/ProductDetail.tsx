@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, Link } from 'react-router-dom';
-import { MessageCircle, MapPin, ChevronLeft } from 'lucide-react';
+import { MessageCircle, MapPin, ChevronLeft, Expand, Box } from 'lucide-react';
 import FloatingNav from '@/components/navigation/FloatingNav';
 import Footer from '@/components/layout/Footer';
+import ImageLightbox from '@/components/gallery/ImageLightbox';
+import ProductViewer3D from '@/components/3d/ProductViewer3D';
 
 // Mock product data
 const products: Record<string, {
@@ -49,6 +52,15 @@ const defaultProduct = products['1'];
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
   const product = products[id || '1'] || defaultProduct;
+  
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [view3D, setView3D] = useState(false);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   const whatsappMessage = encodeURIComponent(
     `Hi, I am interested in ${product.name} from Sanjari Fashion Store. Can you provide more details?`
@@ -72,28 +84,79 @@ export default function ProductDetail() {
       <div className="pt-20 pb-24">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-start">
-            {/* Left - Images (Scrollable) */}
+            {/* Left - Images / 3D View */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               className="space-y-6"
             >
-              {product.images.map((image, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="rounded-2xl overflow-hidden shadow-luxury-lg"
+              {/* View Toggle */}
+              <div className="flex gap-2 p-1 bg-muted rounded-lg w-fit">
+                <button
+                  onClick={() => setView3D(false)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md font-sans text-sm font-medium transition-all ${
+                    !view3D 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                 >
-                  <img
-                    src={image}
-                    alt={`${product.name} - View ${index + 1}`}
-                    className="w-full h-auto object-cover"
-                  />
-                </motion.div>
-              ))}
+                  <Expand className="w-4 h-4" />
+                  Gallery
+                </button>
+                <button
+                  onClick={() => setView3D(true)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md font-sans text-sm font-medium transition-all ${
+                    view3D 
+                      ? 'bg-background text-foreground shadow-sm' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Box className="w-4 h-4" />
+                  3D View
+                </button>
+              </div>
+
+              {view3D ? (
+                /* 3D Product Viewer */
+                <ProductViewer3D 
+                  imageUrl={product.images[0]} 
+                  productName={product.name} 
+                />
+              ) : (
+                /* Image Gallery */
+                product.images.map((image, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="relative rounded-2xl overflow-hidden shadow-luxury-lg group cursor-pointer"
+                    onClick={() => openLightbox(index)}
+                  >
+                    <img
+                      src={image}
+                      alt={`${product.name} - View ${index + 1}`}
+                      className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full flex items-center gap-2 text-foreground font-sans text-sm font-medium">
+                        <Expand className="w-4 h-4" />
+                        Click to expand
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
             </motion.div>
+
+            {/* Lightbox */}
+            <ImageLightbox
+              images={product.images}
+              initialIndex={lightboxIndex}
+              isOpen={lightboxOpen}
+              onClose={() => setLightboxOpen(false)}
+            />
 
             {/* Right - Sticky Details Panel */}
             <motion.div
