@@ -1,94 +1,112 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, Link } from 'react-router-dom';
-import { MessageCircle, MapPin, ChevronLeft, Expand, Box, RotateCw } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { MessageCircle, MapPin, ChevronLeft, Expand, Box, RotateCw, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import FloatingNav from '@/components/navigation/FloatingNav';
 import Footer from '@/components/layout/Footer';
 import ImageLightbox from '@/components/gallery/ImageLightbox';
 import ProductViewer3D from '@/components/3d/ProductViewer3D';
 import ProductSpin360 from '@/components/gallery/ProductSpin360';
 
-// Mock product data
-const products: Record<string, {
-  id: number;
-  name: string;
-  category: string;
-  material: string;
-  fit: string;
-  care: string;
-  description: string;
-  images: string[];
-  spin360Images?: string[];
-}> = {
-  '1': {
-    id: 1,
-    name: 'Royal Silk Saree',
-    category: 'Women',
-    material: 'Pure Mulberry Silk',
-    fit: 'Free Size (Blouse customizable)',
-    care: 'Dry Clean Only',
-    description: 'An exquisite handwoven silk saree featuring intricate zari work and traditional motifs. Perfect for weddings and festive occasions.',
-    images: [
-      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&h=1200&fit=crop',
-      'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=800&h=1200&fit=crop',
-      'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?w=800&h=1200&fit=crop',
-    ],
-    // 360° images - simulating multiple angle shots
-    spin360Images: [
-      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&h=1200&fit=crop',
-      'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=800&h=1200&fit=crop',
-      'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?w=800&h=1200&fit=crop',
-      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&h=1200&fit=crop&sat=-100',
-      'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=800&h=1200&fit=crop&hue=30',
-      'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?w=800&h=1200&fit=crop&blur=0',
-      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&h=1200&fit=crop&bri=10',
-      'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=800&h=1200&fit=crop&con=10',
-    ],
-  },
-  '2': {
-    id: 2,
-    name: 'Classic Sherwani',
-    category: 'Men',
-    material: 'Jacquard Silk',
-    fit: 'Regular Fit',
-    care: 'Dry Clean Recommended',
-    description: 'A timeless sherwani with intricate embroidery, perfect for grooms and wedding guests.',
-    images: [
-      'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&h=1200&fit=crop',
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&h=1200&fit=crop',
-    ],
-    spin360Images: [
-      'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&h=1200&fit=crop',
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&h=1200&fit=crop',
-      'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&h=1200&fit=crop&sat=-50',
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&h=1200&fit=crop&bri=5',
-    ],
-  },
-};
-
-const defaultProduct = products['1'];
-
 type ViewMode = 'gallery' | '3d' | '360';
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
-  const product = products[id || '1'] || defaultProduct;
   
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('gallery');
+
+  // Fetch product from database
+  const { data: product, isLoading: productLoading } = useQuery({
+    queryKey: ['product', id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: Boolean(id),
+  });
+
+  // Fetch product images from database
+  const { data: productImages, isLoading: imagesLoading } = useQuery({
+    queryKey: ['product-images', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase
+        .from('product_images')
+        .select('*')
+        .eq('product_id', id)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: Boolean(id),
+  });
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setLightboxOpen(true);
   };
 
-  const has360 = product.spin360Images && product.spin360Images.length > 0;
+  // Get images array - prefer product_images table, fallback to image_url
+  const images = productImages && productImages.length > 0 
+    ? productImages.map(img => img.image_url)
+    : product?.image_url 
+      ? [product.image_url]
+      : [];
 
+  // For 360 view, use all images (would typically be separate set)
+  const has360 = images.length >= 3;
+
+  const isLoading = productLoading || imagesLoading;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+          <p className="text-muted-foreground font-sans">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-background">
+        <FloatingNav />
+        <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+          <h1 className="font-serif text-3xl text-foreground">Product Not Found</h1>
+          <p className="text-muted-foreground font-sans">The product you're looking for doesn't exist.</p>
+          <Link 
+            to="/collections" 
+            className="btn-gold mt-4"
+          >
+            Browse Collections
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   const whatsappMessage = encodeURIComponent(
     `Hi, I am interested in ${product.name} from Sanjari Fashion Store. Can you provide more details?`
   );
+
+  // Build specs based on available data
+  const specs = [
+    { label: 'Material', value: product.material },
+    { label: 'Sizes', value: product.sizes?.join(', ') || 'Contact for sizes' },
+  ].filter(spec => spec.value);
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,59 +133,65 @@ export default function ProductDetail() {
               className="space-y-6"
             >
               {/* View Toggle */}
-              <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit flex-wrap">
-                <button
-                  onClick={() => setViewMode('gallery')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md font-sans text-sm font-medium transition-all ${
-                    viewMode === 'gallery'
-                      ? 'bg-background text-foreground shadow-sm' 
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Expand className="w-4 h-4" />
-                  Gallery
-                </button>
-                <button
-                  onClick={() => setViewMode('3d')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md font-sans text-sm font-medium transition-all ${
-                    viewMode === '3d'
-                      ? 'bg-background text-foreground shadow-sm' 
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Box className="w-4 h-4" />
-                  3D View
-                </button>
-                {has360 && (
+              {images.length > 0 && (
+                <div className="flex gap-1 p-1 bg-muted rounded-lg w-fit flex-wrap">
                   <button
-                    onClick={() => setViewMode('360')}
+                    onClick={() => setViewMode('gallery')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md font-sans text-sm font-medium transition-all ${
-                      viewMode === '360'
+                      viewMode === 'gallery'
                         ? 'bg-background text-foreground shadow-sm' 
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    <RotateCw className="w-4 h-4" />
-                    360°
+                    <Expand className="w-4 h-4" />
+                    Gallery
                   </button>
-                )}
-              </div>
+                  <button
+                    onClick={() => setViewMode('3d')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-md font-sans text-sm font-medium transition-all ${
+                      viewMode === '3d'
+                        ? 'bg-background text-foreground shadow-sm' 
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    <Box className="w-4 h-4" />
+                    3D View
+                  </button>
+                  {has360 && (
+                    <button
+                      onClick={() => setViewMode('360')}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-md font-sans text-sm font-medium transition-all ${
+                        viewMode === '360'
+                          ? 'bg-background text-foreground shadow-sm' 
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <RotateCw className="w-4 h-4" />
+                      360°
+                    </button>
+                  )}
+                </div>
+              )}
 
-              {viewMode === '3d' ? (
+              {images.length === 0 ? (
+                <div className="aspect-[3/4] bg-muted rounded-2xl flex items-center justify-center">
+                  <p className="text-muted-foreground font-sans">No images available</p>
+                </div>
+              ) : viewMode === '3d' ? (
                 /* 3D Product Viewer */
                 <ProductViewer3D 
-                  imageUrl={product.images[0]} 
+                  imageUrl={images[0]} 
                   productName={product.name} 
                 />
               ) : viewMode === '360' && has360 ? (
                 /* 360° Spin Viewer */
                 <ProductSpin360
-                  images={product.spin360Images!}
+                  images={images}
                   productName={product.name}
                 />
               ) : (
                 /* Image Gallery */
-                product.images.map((image, index) => (
+                images.map((image, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0, y: 30 }}
@@ -195,7 +219,7 @@ export default function ProductDetail() {
 
             {/* Lightbox */}
             <ImageLightbox
-              images={product.images}
+              images={images}
               initialIndex={lightboxIndex}
               isOpen={lightboxOpen}
               onClose={() => setLightboxOpen(false)}
@@ -219,34 +243,34 @@ export default function ProductDetail() {
                 </h1>
 
                 {/* Description */}
-                <p className="text-muted-foreground font-sans text-lg leading-relaxed mb-8">
-                  {product.description}
-                </p>
+                {product.description && (
+                  <p className="text-muted-foreground font-sans text-lg leading-relaxed mb-8">
+                    {product.description}
+                  </p>
+                )}
 
                 {/* Specs Table */}
-                <div className="border border-border rounded-lg overflow-hidden mb-8">
-                  <table className="w-full">
-                    <tbody>
-                      {[
-                        { label: 'Material', value: product.material },
-                        { label: 'Fit', value: product.fit },
-                        { label: 'Care', value: product.care },
-                      ].map((spec, index) => (
-                        <tr 
-                          key={spec.label}
-                          className={index !== 2 ? 'border-b border-border' : ''}
-                        >
-                          <td className="px-4 py-3 bg-muted font-sans font-semibold text-sm uppercase tracking-wider text-muted-foreground">
-                            {spec.label}
-                          </td>
-                          <td className="px-4 py-3 font-sans text-foreground">
-                            {spec.value}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                {specs.length > 0 && (
+                  <div className="border border-border rounded-lg overflow-hidden mb-8">
+                    <table className="w-full">
+                      <tbody>
+                        {specs.map((spec, index) => (
+                          <tr 
+                            key={spec.label}
+                            className={index !== specs.length - 1 ? 'border-b border-border' : ''}
+                          >
+                            <td className="px-4 py-3 bg-muted font-sans font-semibold text-sm uppercase tracking-wider text-muted-foreground">
+                              {spec.label}
+                            </td>
+                            <td className="px-4 py-3 font-sans text-foreground">
+                              {spec.value}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
 
                 {/* CTA Buttons */}
                 <div className="space-y-4">
