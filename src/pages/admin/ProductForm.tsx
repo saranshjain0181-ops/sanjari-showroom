@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useCallback, useEffect } from 'react';
+import { motion, Reorder } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,10 +16,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from 'sonner';
-import { Upload, X, ArrowLeft } from 'lucide-react';
+import { Upload, X, ArrowLeft, GripVertical, Star, Plus, Loader2 } from 'lucide-react';
 
 const categories = ['Women', 'Men', 'Kids', 'Accessories'];
 const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size'];
+
+interface ProductImage {
+  id?: string;
+  image_url: string;
+  display_order: number;
+  is_primary: boolean;
+  file?: File;
+  isNew?: boolean;
+}
 
 export default function ProductForm() {
   const navigate = useNavigate();
@@ -35,12 +44,12 @@ export default function ProductForm() {
     sizes: [] as string[],
     image_url: '',
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [productImages, setProductImages] = useState<ProductImage[]>([]);
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
   // Fetch existing product if editing
-  const { isLoading: isFetching } = useQuery({
+  const { data: productData, isLoading: isFetching } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
       if (!id) return null;
@@ -53,87 +62,214 @@ export default function ProductForm() {
       return data;
     },
     enabled: isEditing,
-    meta: {
-      onSuccess: (data: any) => {
-        if (data) {
-          setFormData({
-            name: data.name,
-            category: data.category,
-            material: data.material || '',
-            description: data.description || '',
-            sizes: data.sizes || [],
-            image_url: data.image_url || '',
-          });
-          if (data.image_url) {
-            setImagePreview(data.image_url);
-          }
-        }
-      },
-    },
   });
 
-  const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
+  // Fetch existing product images
+  const { data: existingImages } = useQuery({
+    queryKey: ['product-images', id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data, error } = await supabase
+        .from('product_images')
+        .select('*')
+        .eq('product_id', id)
+        .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: isEditing,
+  });
+
+  // Populate form when data loads
+  useEffect(() => {
+    if (productData) {
+      setFormData({
+        name: productData.name,
+        category: productData.category,
+        material: productData.material || '',
+        description: productData.description || '',
+        sizes: productData.sizes || [],
+        image_url: productData.image_url || '',
+      });
+    }
+  }, [productData]);
+
+  // Populate images when they load
+  useEffect(() => {
+    if (existingImages && existingImages.length > 0) {
+      setProductImages(existingImages.map(img => ({
+        id: img.id,
+        image_url: img.image_url,
+        display_order: img.display_order,
+        is_primary: img.is_primary,
+      })));
+    }
+  }, [existingImages]);
+
+  const handleImageAdd = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newImages: ProductImage[] = [];
+    Array.from(files).forEach((file, index) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        const newImage: ProductImage = {
+          image_url: reader.result as string,
+          display_order: productImages.length + index,
+          is_primary: productImages.length === 0 && index === 0,
+          file,
+          isNew: true,
+        };
+        setProductImages(prev => [...prev, newImage]);
       };
       reader.readAsDataURL(file);
+    });
+
+    // Reset input
+    e.target.value = '';
+  }, [productImages.length]);
+
+  const handleImageRemove = (index: number) => {
+    const image = productImages[index];
+    if (image.id) {
+      setImagesToDelete(prev => [...prev, image.id!]);
     }
-  }, []);
+    
+    const wasPrimary = image.is_primary;
+    setProductImages(prev => {
+      const updated = prev.filter((_, i) => i !== index);
+      // If we removed the primary, make the first one primary
+      if (wasPrimary && updated.length > 0) {
+        updated[0].is_primary = true;
+      }
+      return updated.map((img, i) => ({ ...img, display_order: i }));
+    });
+  };
 
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) return formData.image_url || null;
+  const handleSetPrimary = (index: number) => {
+    setProductImages(prev => prev.map((img, i) => ({
+      ...img,
+      is_primary: i === index,
+    })));
+  };
 
-    setIsUploading(true);
-    try {
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
+  const handleReorder = (newOrder: ProductImage[]) => {
+    setProductImages(newOrder.map((img, i) => ({
+      ...img,
+      display_order: i,
+    })));
+  };
 
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, imageFile);
+  const uploadNewImages = async (productId: string): Promise<void> => {
+    for (const image of productImages) {
+      if (image.isNew && image.file) {
+        const fileExt = image.file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const filePath = `products/${productId}/${fileName}`;
 
-      if (uploadError) throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, image.file);
 
-      const { data } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
+        if (uploadError) throw uploadError;
 
-      return data.publicUrl;
-    } catch (error: any) {
-      toast.error('Failed to upload image: ' + error.message);
-      return null;
-    } finally {
-      setIsUploading(false);
+        const { data } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+
+        // Insert into product_images table
+        const { error: insertError } = await supabase
+          .from('product_images')
+          .insert({
+            product_id: productId,
+            image_url: data.publicUrl,
+            display_order: image.display_order,
+            is_primary: image.is_primary,
+          });
+
+        if (insertError) throw insertError;
+      } else if (image.id) {
+        // Update existing image's order and primary status
+        const { error: updateError } = await supabase
+          .from('product_images')
+          .update({
+            display_order: image.display_order,
+            is_primary: image.is_primary,
+          })
+          .eq('id', image.id);
+
+        if (updateError) throw updateError;
+      }
+    }
+
+    // Delete removed images
+    for (const imageId of imagesToDelete) {
+      const { error } = await supabase
+        .from('product_images')
+        .delete()
+        .eq('id', imageId);
+      if (error) console.error('Failed to delete image:', error);
     }
   };
 
   const mutation = useMutation({
-    mutationFn: async (data: typeof formData & { image_url: string | null }) => {
+    mutationFn: async (data: typeof formData) => {
+      setIsUploading(true);
+      
+      // Get primary image URL for backward compatibility
+      const primaryImage = productImages.find(img => img.is_primary);
+      const imageUrl = primaryImage?.isNew ? '' : (primaryImage?.image_url || '');
+
+      let productId = id;
+
       if (isEditing && id) {
         const { error } = await supabase
           .from('products')
-          .update(data)
+          .update({ ...data, image_url: imageUrl })
           .eq('id', id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { data: newProduct, error } = await supabase
           .from('products')
-          .insert([data]);
+          .insert([{ ...data, image_url: imageUrl }])
+          .select('id')
+          .single();
         if (error) throw error;
+        productId = newProduct.id;
+      }
+
+      // Handle images
+      await uploadNewImages(productId!);
+
+      // Update the primary image URL after upload
+      if (primaryImage?.isNew) {
+        const { data: images } = await supabase
+          .from('product_images')
+          .select('image_url')
+          .eq('product_id', productId!)
+          .eq('is_primary', true)
+          .maybeSingle();
+
+        if (images?.image_url) {
+          await supabase
+            .from('products')
+            .update({ image_url: images.image_url })
+            .eq('id', productId!);
+        }
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product-images'] });
       toast.success(isEditing ? 'Product updated!' : 'Product created!');
       navigate('/admin/products');
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to save product');
+    },
+    onSettled: () => {
+      setIsUploading(false);
     },
   });
 
@@ -145,8 +281,7 @@ export default function ProductForm() {
       return;
     }
 
-    const imageUrl = await uploadImage();
-    mutation.mutate({ ...formData, image_url: imageUrl });
+    mutation.mutate(formData);
   };
 
   const handleSizeToggle = (size: string) => {
@@ -188,46 +323,112 @@ export default function ProductForm() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-card rounded-xl shadow-luxury p-6 md:p-8 space-y-6">
-          {/* Image Upload */}
-          <div className="space-y-2">
-            <Label className="font-sans font-medium">Product Image</Label>
-            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-              {imagePreview ? (
-                <div className="relative inline-block">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="max-h-48 rounded-lg mx-auto"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageFile(null);
-                      setImagePreview(null);
-                      setFormData(prev => ({ ...prev, image_url: '' }));
-                    }}
-                    className="absolute -top-2 -right-2 w-8 h-8 bg-destructive text-white rounded-full flex items-center justify-center"
+          {/* Multi-Image Upload */}
+          <div className="space-y-3">
+            <Label className="font-sans font-medium">
+              Product Images
+              <span className="text-muted-foreground font-normal ml-2">
+                (Drag to reorder, star to set as primary)
+              </span>
+            </Label>
+            
+            {/* Image Grid */}
+            {productImages.length > 0 && (
+              <Reorder.Group
+                axis="x"
+                values={productImages}
+                onReorder={handleReorder}
+                className="flex flex-wrap gap-4"
+              >
+                {productImages.map((image, index) => (
+                  <Reorder.Item
+                    key={image.id || image.image_url}
+                    value={image}
+                    className="relative group"
                   >
-                    <X className="w-4 h-4" />
-                  </button>
+                    <div className={`
+                      relative w-28 h-28 rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing
+                      ${image.is_primary ? 'border-primary' : 'border-border'}
+                    `}>
+                      <img
+                        src={image.image_url}
+                        alt={`Product ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                      
+                      {/* Drag Handle */}
+                      <div className="absolute top-1 left-1 p-1 bg-black/50 rounded text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                        <GripVertical className="w-3 h-3" />
+                      </div>
+                      
+                      {/* Primary Badge */}
+                      {image.is_primary && (
+                        <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-primary text-primary-foreground text-[10px] font-sans font-semibold rounded">
+                          Primary
+                        </div>
+                      )}
+                      
+                      {/* Action Buttons */}
+                      <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {!image.is_primary && (
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimary(index)}
+                            className="p-1.5 bg-black/70 hover:bg-primary text-white rounded transition-colors"
+                            title="Set as primary"
+                          >
+                            <Star className="w-3 h-3" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleImageRemove(index)}
+                          className="p-1.5 bg-black/70 hover:bg-destructive text-white rounded transition-colors"
+                          title="Remove"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </Reorder.Item>
+                ))}
+              </Reorder.Group>
+            )}
+            
+            {/* Add More Button */}
+            <label className="cursor-pointer">
+              <div className={`
+                border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary hover:bg-primary/5 transition-colors
+                ${productImages.length === 0 ? 'py-12' : 'py-4'}
+              `}>
+                <div className="flex flex-col items-center gap-2">
+                  {productImages.length === 0 ? (
+                    <>
+                      <Upload className="w-10 h-10 text-muted-foreground" />
+                      <p className="text-muted-foreground font-sans">
+                        Drag & drop or click to upload images
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        You can select multiple images
+                      </p>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Plus className="w-5 h-5" />
+                      <span className="font-sans text-sm">Add more images</span>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <label className="cursor-pointer">
-                  <div className="flex flex-col items-center gap-2">
-                    <Upload className="w-10 h-10 text-muted-foreground" />
-                    <p className="text-muted-foreground font-sans">
-                      Drag & drop or click to upload
-                    </p>
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </label>
-              )}
-            </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageAdd}
+                  className="hidden"
+                />
+              </div>
+            </label>
           </div>
 
           {/* Name */}
@@ -332,7 +533,14 @@ export default function ProductForm() {
               className="flex-1 btn-gold"
               disabled={mutation.isPending || isUploading}
             >
-              {mutation.isPending || isUploading ? 'Saving...' : isEditing ? 'Update Product' : 'Create Product'}
+              {(mutation.isPending || isUploading) ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving...
+                </span>
+              ) : (
+                isEditing ? 'Update Product' : 'Create Product'
+              )}
             </Button>
           </div>
         </form>
