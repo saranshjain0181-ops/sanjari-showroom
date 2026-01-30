@@ -24,17 +24,28 @@ export default function ProductSpin360({ images, productName }: ProductSpin360Pr
   const totalFrames = images.length;
   const sensitivity = 5; // pixels per frame
 
-  // Preload all images
+  // Preload all images with proper URL handling
   useEffect(() => {
     const loadImage = (index: number) => {
       const img = new Image();
       img.onload = () => {
         setLoadedImages(prev => new Set([...prev, index]));
       };
-      img.src = images[index];
+      img.onerror = () => {
+        // Still mark as loaded to prevent infinite loading state
+        console.warn(`Failed to load image at index ${index}:`, images[index]);
+        setLoadedImages(prev => new Set([...prev, index]));
+      };
+      // Ensure proper URL - handle both absolute and relative paths
+      const imageUrl = images[index];
+      img.src = imageUrl.startsWith('http') || imageUrl.startsWith('/') 
+        ? imageUrl 
+        : `/${imageUrl}`;
     };
 
-    images.forEach((_, index) => loadImage(index));
+    if (images.length > 0) {
+      images.forEach((_, index) => loadImage(index));
+    }
   }, [images]);
 
   // Check if all images are loaded
@@ -160,19 +171,29 @@ export default function ProductSpin360({ images, productName }: ProductSpin360Pr
         "relative w-full h-full",
         fullscreen && "max-w-4xl max-h-full"
       )}>
-        {images.map((image, index) => (
-          <img
-            key={index}
-            src={image}
-            alt={`${productName} - Angle ${index + 1}`}
-            className={cn(
-              "absolute inset-0 w-full h-full object-cover transition-opacity duration-75",
-              fullscreen && "object-contain",
-              index === currentFrame ? "opacity-100" : "opacity-0"
-            )}
-            draggable={false}
-          />
-        ))}
+        {images.map((image, index) => {
+          // Ensure proper URL handling for storage paths
+          const imageUrl = image.startsWith('http') || image.startsWith('/') 
+            ? image 
+            : `/${image}`;
+          return (
+            <img
+              key={index}
+              src={imageUrl}
+              alt={`${productName} - Angle ${index + 1}`}
+              className={cn(
+                "absolute inset-0 w-full h-full object-cover transition-opacity duration-75",
+                fullscreen && "object-contain",
+                index === currentFrame ? "opacity-100" : "opacity-0"
+              )}
+              draggable={false}
+              onError={(e) => {
+                console.warn(`360 image failed to load:`, image);
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          );
+        })}
       </div>
 
       {/* Rotation Indicator */}

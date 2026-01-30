@@ -5,18 +5,18 @@ import FloatingNav from '@/components/navigation/FloatingNav';
 import Footer from '@/components/layout/Footer';
 import { useState } from 'react';
 
-const categories = ['All', 'Women', 'Men', 'Kids', 'Accessories'];
+const categories = ['All', 'T-shirts', 'Shirts', 'Jeans', 'Hoodies', 'Jackets', 'Sherwanis'];
 
 const allProducts = [
-  { id: 1, name: 'Royal Silk Saree', category: 'Women', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&h=700&fit=crop' },
-  { id: 2, name: 'Classic Sherwani', category: 'Men', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&h=650&fit=crop' },
-  { id: 3, name: 'Designer Lehenga', category: 'Women', image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=500&h=800&fit=crop' },
-  { id: 4, name: 'Kids Party Wear', category: 'Kids', image: 'https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?w=500&h=600&fit=crop' },
-  { id: 5, name: 'Embroidered Kurta', category: 'Men', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=750&fit=crop' },
-  { id: 6, name: 'Festive Anarkali', category: 'Women', image: 'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?w=500&h=700&fit=crop' },
-  { id: 7, name: 'Bridal Lehenga Set', category: 'Women', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&h=850&fit=crop' },
-  { id: 8, name: 'Boys Ethnic Set', category: 'Kids', image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=500&h=600&fit=crop' },
-  { id: 9, name: 'Designer Clutch', category: 'Accessories', image: 'https://images.unsplash.com/photo-1594938291221-94f18cbb5660?w=500&h=500&fit=crop' },
+  { id: 1, name: 'Classic Cotton Tee', category: 'T-shirts', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=700&fit=crop' },
+  { id: 2, name: 'Premium Sherwani', category: 'Sherwanis', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&h=650&fit=crop' },
+  { id: 3, name: 'Slim Fit Denim', category: 'Jeans', image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&h=800&fit=crop' },
+  { id: 4, name: 'Casual Oxford Shirt', category: 'Shirts', image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&h=600&fit=crop' },
+  { id: 5, name: 'Urban Hoodie', category: 'Hoodies', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&h=750&fit=crop' },
+  { id: 6, name: 'Leather Jacket', category: 'Jackets', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&h=700&fit=crop' },
+  { id: 7, name: 'Designer Sherwani', category: 'Sherwanis', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&h=850&fit=crop' },
+  { id: 8, name: 'Graphic Print Tee', category: 'T-shirts', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&h=600&fit=crop' },
+  { id: 9, name: 'Bomber Jacket', category: 'Jackets', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500&h=500&fit=crop' },
 ];
 
 export default function Collections() {

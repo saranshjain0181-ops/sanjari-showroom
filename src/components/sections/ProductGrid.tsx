@@ -2,43 +2,43 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Eye } from 'lucide-react';
 
-// Sample products data
+// Sample products data - Men's categories only
 const products = [
   {
     id: 1,
-    name: 'Royal Silk Saree',
-    category: 'Women',
-    image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=500&h=600&fit=crop',
+    name: 'Classic Cotton Tee',
+    category: 'T-shirts',
+    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=600&fit=crop',
   },
   {
     id: 2,
-    name: 'Classic Sherwani',
-    category: 'Men',
+    name: 'Premium Sherwani',
+    category: 'Sherwanis',
     image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&h=600&fit=crop',
   },
   {
     id: 3,
-    name: 'Designer Lehenga',
-    category: 'Women',
-    image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=500&h=600&fit=crop',
+    name: 'Slim Fit Denim',
+    category: 'Jeans',
+    image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&h=600&fit=crop',
   },
   {
     id: 4,
-    name: 'Kids Party Wear',
-    category: 'Kids',
-    image: 'https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?w=500&h=600&fit=crop',
+    name: 'Casual Oxford Shirt',
+    category: 'Shirts',
+    image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&h=600&fit=crop',
   },
   {
     id: 5,
-    name: 'Embroidered Kurta Set',
-    category: 'Men',
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=600&fit=crop',
+    name: 'Urban Hoodie',
+    category: 'Hoodies',
+    image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&h=600&fit=crop',
   },
   {
     id: 6,
-    name: 'Festive Anarkali',
-    category: 'Women',
-    image: 'https://images.unsplash.com/photo-1599839575945-a9e5af0c3fa5?w=500&h=600&fit=crop',
+    name: 'Leather Jacket',
+    category: 'Jackets',
+    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&h=600&fit=crop',
   },
 ];
 
