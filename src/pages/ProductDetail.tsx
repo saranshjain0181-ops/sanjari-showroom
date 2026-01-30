@@ -9,6 +9,7 @@ import Footer from '@/components/layout/Footer';
 import ImageLightbox from '@/components/gallery/ImageLightbox';
 import ProductViewer3D from '@/components/3d/ProductViewer3D';
 import ProductSpin360 from '@/components/gallery/ProductSpin360';
+import SizeSelector from '@/components/product/SizeSelector';
 
 type ViewMode = 'gallery' | '3d' | '360';
 
@@ -18,6 +19,7 @@ export default function ProductDetail() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('gallery');
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
   // Fetch product from database
   const { data: product, isLoading: productLoading } = useQuery({
@@ -248,6 +250,16 @@ export default function ProductDetail() {
                     {product.description}
                   </p>
                 )}
+
+                {/* Size Selector */}
+                <div className="mb-8">
+                  <SizeSelector
+                    sizes={product.sizes || []}
+                    selectedSize={selectedSize}
+                    onSizeSelect={setSelectedSize}
+                    sizeType={product.category === 'Jeans' ? 'number' : 'letter'}
+                  />
+                </div>
 
                 {/* Specs Table */}
                 {specs.length > 0 && (

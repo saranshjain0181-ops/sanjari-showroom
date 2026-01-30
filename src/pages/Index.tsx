@@ -1,4 +1,5 @@
 import HeroSection from '@/components/hero/HeroSection';
+import VideoSection from '@/components/sections/VideoSection';
 import CampaignTapes from '@/components/sections/CampaignTapes';
 import ProductGrid from '@/components/sections/ProductGrid';
 import ContactSection from '@/components/sections/ContactSection';
@@ -10,6 +11,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <FloatingNav />
       <HeroSection />
+      <VideoSection />
       <CampaignTapes />
       <ProductGrid />
       <ContactSection />
