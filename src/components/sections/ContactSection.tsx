@@ -97,7 +97,7 @@ export default function ContactSection() {
 
             {/* WhatsApp CTA */}
             <motion.a
-              href="https://wa.me/919669600574?text=Hi,%20I%20am%20interested%20in%20learning%20more%20about%20Sanjari%20Fashion%20Store"
+              href="https://wa.me/9669600574?text=Hi,%20I%20am%20interested%20in%20learning%20more%20about%20Sanjari%20Fashion%20Store"
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, y: 20 }}
