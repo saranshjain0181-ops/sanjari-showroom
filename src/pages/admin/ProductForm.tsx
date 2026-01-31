@@ -303,248 +303,246 @@ export default function ProductForm() {
 
   return (
     <div className="max-w-3xl mx-auto">
+      {/* Header with Motion - SEPARATE from Form to fix Ref Error */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
       >
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate('/admin/products')}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 font-sans text-sm"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Products
-          </button>
-          <h1 className="font-serif text-3xl text-foreground">
-            {isEditing ? 'Edit Product' : 'Add New Product'}
-          </h1>
-        </div>
+        <button
+          onClick={() => navigate('/admin/products')}
+          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4 font-sans text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Products
+        </button>
+        <h1 className="font-serif text-3xl text-foreground">
+          {isEditing ? 'Edit Product' : 'Add New Product'}
+        </h1>
+      </motion.div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-card rounded-xl shadow-luxury p-6 md:p-8 space-y-6">
-          {/* Multi-Image Upload */}
-          <div className="space-y-3">
-            <Label className="font-sans font-medium">
-              Product Images
-              <span className="text-muted-foreground font-normal ml-2">
-                (Drag to reorder, star to set as primary)
-              </span>
-            </Label>
-            
-            {/* Image Grid */}
-            {productImages.length > 0 && (
-              <Reorder.Group
-                axis="x"
-                values={productImages}
-                onReorder={handleReorder}
-                className="flex flex-wrap gap-4"
-              >
-                {productImages.map((image, index) => (
-                  <Reorder.Item
-                    key={image.id || image.image_url}
-                    value={image}
-                    className="relative group"
-                  >
-                    <div className={`
-                      relative w-28 h-28 rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing
-                      ${image.is_primary ? 'border-primary' : 'border-border'}
-                    `}>
-                      <img
-                        src={image.image_url}
-                        alt={`Product ${index + 1}`}
-                        className="w-full h-full object-cover"
-                        draggable={false}
-                      />
-                      
-                      {/* Drag Handle */}
-                      <div className="absolute top-1 left-1 p-1 bg-black/50 rounded text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                        <GripVertical className="w-3 h-3" />
+      {/* Form WITHOUT Motion Wrapper */}
+      <form onSubmit={handleSubmit} className="bg-card rounded-xl shadow-luxury p-6 md:p-8 space-y-6">
+        {/* Multi-Image Upload */}
+        <div className="space-y-3">
+          <Label className="font-sans font-medium">
+            Product Images
+            <span className="text-muted-foreground font-normal ml-2">
+              (Drag to reorder, star to set as primary)
+            </span>
+          </Label>
+          
+          {productImages.length > 0 && (
+            <Reorder.Group
+              axis="x"
+              values={productImages}
+              onReorder={handleReorder}
+              className="flex flex-wrap gap-4"
+            >
+              {productImages.map((image, index) => (
+                <Reorder.Item
+                  key={image.id || image.image_url}
+                  value={image}
+                  className="relative group"
+                >
+                  <div className={`
+                    relative w-28 h-28 rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing
+                    ${image.is_primary ? 'border-primary' : 'border-border'}
+                  `}>
+                    <img
+                      src={image.image_url}
+                      alt={`Product ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      draggable={false}
+                    />
+                    
+                    {/* Drag Handle */}
+                    <div className="absolute top-1 left-1 p-1 bg-black/50 rounded text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                      <GripVertical className="w-3 h-3" />
+                    </div>
+                    
+                    {/* Primary Badge */}
+                    {image.is_primary && (
+                      <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-primary text-primary-foreground text-[10px] font-sans font-semibold rounded">
+                        Primary
                       </div>
-                      
-                      {/* Primary Badge */}
-                      {image.is_primary && (
-                        <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-primary text-primary-foreground text-[10px] font-sans font-semibold rounded">
-                          Primary
-                        </div>
-                      )}
-                      
-                      {/* Action Buttons */}
-                      <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {!image.is_primary && (
-                          <button
-                            type="button"
-                            onClick={() => handleSetPrimary(index)}
-                            className="p-1.5 bg-black/70 hover:bg-primary text-white rounded transition-colors"
-                            title="Set as primary"
-                          >
-                            <Star className="w-3 h-3" />
-                          </button>
-                        )}
+                    )}
+                    
+                    {/* Action Buttons */}
+                    <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {!image.is_primary && (
                         <button
                           type="button"
-                          onClick={() => handleImageRemove(index)}
-                          className="p-1.5 bg-black/70 hover:bg-destructive text-white rounded transition-colors"
-                          title="Remove"
+                          onClick={() => handleSetPrimary(index)}
+                          className="p-1.5 bg-black/70 hover:bg-primary text-white rounded transition-colors"
+                          title="Set as primary"
                         >
-                          <X className="w-3 h-3" />
+                          <Star className="w-3 h-3" />
                         </button>
-                      </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleImageRemove(index)}
+                        className="p-1.5 bg-black/70 hover:bg-destructive text-white rounded transition-colors"
+                        title="Remove"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
                     </div>
-                  </Reorder.Item>
-                ))}
-              </Reorder.Group>
-            )}
-            
-            {/* Add More Button */}
-            <label className="cursor-pointer">
-              <div className={`
-                border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary hover:bg-primary/5 transition-colors
-                ${productImages.length === 0 ? 'py-12' : 'py-4'}
-              `}>
-                <div className="flex flex-col items-center gap-2">
-                  {productImages.length === 0 ? (
-                    <>
-                      <Upload className="w-10 h-10 text-muted-foreground" />
-                      <p className="text-muted-foreground font-sans">
-                        Drag & drop or click to upload images
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        You can select multiple images
-                      </p>
-                    </>
-                  ) : (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Plus className="w-5 h-5" />
-                      <span className="font-sans text-sm">Add more images</span>
-                    </div>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageAdd}
+                  </div>
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+          )}
+          
+          {/* Add More Button */}
+          <label className="cursor-pointer">
+            <div className={`
+              border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary hover:bg-primary/5 transition-colors
+              ${productImages.length === 0 ? 'py-12' : 'py-4'}
+            `}>
+              <div className="flex flex-col items-center gap-2">
+                {productImages.length === 0 ? (
+                  <>
+                    <Upload className="w-10 h-10 text-muted-foreground" />
+                    <p className="text-muted-foreground font-sans">
+                      Drag & drop or click to upload images
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      You can select multiple images
+                    </p>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Plus className="w-5 h-5" />
+                    <span className="font-sans text-sm">Add more images</span>
+                  </div>
+                )}
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageAdd}
+                className="hidden"
+              />
+            </div>
+          </label>
+        </div>
+
+        {/* Name */}
+        <div className="space-y-2">
+          <Label htmlFor="name" className="font-sans font-medium">
+            Product Name *
+          </Label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            placeholder="e.g., Royal Silk Saree"
+            required
+          />
+        </div>
+
+        {/* Category */}
+        <div className="space-y-2">
+          <Label className="font-sans font-medium">Category *</Label>
+          <Select
+            value={formData.category}
+            onValueChange={(value) => setFormData({ ...formData, category: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Material */}
+        <div className="space-y-2">
+          <Label htmlFor="material" className="font-sans font-medium">
+            Material
+          </Label>
+          <Input
+            id="material"
+            value={formData.material}
+            onChange={(e) => setFormData({ ...formData, material: e.target.value })}
+            placeholder="e.g., Pure Mulberry Silk"
+          />
+        </div>
+
+        {/* Description */}
+        <div className="space-y-2">
+          <Label htmlFor="description" className="font-sans font-medium">
+            Description
+          </Label>
+          <Textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            placeholder="Describe the product..."
+            rows={4}
+          />
+        </div>
+
+        {/* Sizes */}
+        <div className="space-y-2">
+          <Label className="font-sans font-medium">Available Sizes</Label>
+          <div className="flex flex-wrap gap-3">
+            {sizes.map((size) => (
+              <label
+                key={size}
+                className={`
+                  flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors
+                  ${formData.sizes.includes(size)
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background border-border hover:border-primary'
+                  }
+                `}
+              >
+                <Checkbox
+                  checked={formData.sizes.includes(size)}
+                  onCheckedChange={() => handleSizeToggle(size)}
                   className="hidden"
                 />
-              </div>
-            </label>
+                <span className="font-sans text-sm">{size}</span>
+              </label>
+            ))}
           </div>
+        </div>
 
-          {/* Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name" className="font-sans font-medium">
-              Product Name *
-            </Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="e.g., Royal Silk Saree"
-              required
-            />
-          </div>
-
-          {/* Category */}
-          <div className="space-y-2">
-            <Label className="font-sans font-medium">Category *</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => setFormData({ ...formData, category: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Material */}
-          <div className="space-y-2">
-            <Label htmlFor="material" className="font-sans font-medium">
-              Material
-            </Label>
-            <Input
-              id="material"
-              value={formData.material}
-              onChange={(e) => setFormData({ ...formData, material: e.target.value })}
-              placeholder="e.g., Pure Mulberry Silk"
-            />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description" className="font-sans font-medium">
-              Description
-            </Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Describe the product..."
-              rows={4}
-            />
-          </div>
-
-          {/* Sizes */}
-          <div className="space-y-2">
-            <Label className="font-sans font-medium">Available Sizes</Label>
-            <div className="flex flex-wrap gap-3">
-              {sizes.map((size) => (
-                <label
-                  key={size}
-                  className={`
-                    flex items-center gap-2 px-4 py-2 rounded-lg border cursor-pointer transition-colors
-                    ${formData.sizes.includes(size)
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background border-border hover:border-primary'
-                    }
-                  `}
-                >
-                  <Checkbox
-                    checked={formData.sizes.includes(size)}
-                    onCheckedChange={() => handleSizeToggle(size)}
-                    className="hidden"
-                  />
-                  <span className="font-sans text-sm">{size}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Submit */}
-          <div className="flex gap-4 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate('/admin/products')}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1 btn-gold"
-              disabled={mutation.isPending || isUploading}
-            >
-              {(mutation.isPending || isUploading) ? (
-                <span className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
-                </span>
-              ) : (
-                isEditing ? 'Update Product' : 'Create Product'
-              )}
-            </Button>
-          </div>
-        </form>
-      </motion.div>
+        {/* Submit */}
+        <div className="flex gap-4 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate('/admin/products')}
+            className="flex-1"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="flex-1 btn-gold"
+            disabled={mutation.isPending || isUploading}
+          >
+            {(mutation.isPending || isUploading) ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </span>
+            ) : (
+              isEditing ? 'Update Product' : 'Create Product'
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 }
