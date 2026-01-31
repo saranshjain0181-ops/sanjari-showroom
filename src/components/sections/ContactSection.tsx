@@ -111,25 +111,23 @@ export default function ContactSection() {
             </motion.a>
           </motion.div>
 
-          {/* Map */}
+          {/* Map Link */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="rounded-2xl overflow-hidden shadow-luxury-lg h-[400px] lg:h-full min-h-[400px]"
+            className="flex items-center justify-center rounded-2xl bg-background shadow-luxury-lg h-[400px] lg:h-full min-h-[400px]"
           >
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d235013.70716843014!2d75.69906574999999!3d22.7240968!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3962fcad1b410ddb%3A0x96ec4da356240f4!2sIndore%2C%20Madhya%20Pradesh%2C%20India!5e0!3m2!1sen!2sus!4v1706886400000!5m2!1sen!2sus"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Sanjari Fashion Store Location"
-              className="grayscale-[30%] hover:grayscale-0 transition-all duration-500"
-            />
+            <a
+              href="https://www.google.com/maps/search/?api=1&query=123MGRoad,Indore,MadhyaPradesh452001"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 btn-gold text-lg px-8 py-4"
+            >
+              <MapPin className="w-6 h-6" />
+              View on Google Maps
+            </a>
           </motion.div>
         </div>
       </div>
