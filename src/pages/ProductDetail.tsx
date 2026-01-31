@@ -287,7 +287,7 @@ export default function ProductDetail() {
                 {/* CTA Buttons */}
                 <div className="space-y-4">
                   <a
-                    href={`https://wa.me/917311234567?text=${whatsappMessage}`}
+                    href={`https://wa.me/919669600574?text=${whatsappMessage}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-3 w-full btn-gold text-lg"
