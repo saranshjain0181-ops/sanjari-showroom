@@ -14,7 +14,8 @@ export default function AdminDashboard() {
     navigate("/"); // Go to homepage after logout
   };
 
-  const { data: products, isLoading } = useQuery({
+  // 1. Fetch Product Count
+  const { data: products, isLoading: loadingProducts } = useQuery({
     queryKey: ['products-count'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -25,30 +26,60 @@ export default function AdminDashboard() {
     },
   });
 
-  const stats = [
+  // 2. Fetch Real View Count (From the new 'store_stats' table)
+  const { data: stats } = useQuery({
+    queryKey: ['store-stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('store_stats')
+        .select('views_count')
+        .maybeSingle(); // Use maybeSingle to avoid errors if empty
+      
+      return data;
+    },
+  });
+
+  // 3. Fetch Real Inquiries Count (From the new 'inquiries' table)
+  const { data: inquiriesCount } = useQuery({
+    queryKey: ['inquiries-count'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('inquiries')
+        .select('*', { count: 'exact', head: true }); // 'head: true' just counts rows
+      
+      if (error) return 0;
+      return count;
+    },
+  });
+
+  const statsList = [
     { 
       name: 'Total Products', 
-      value: isLoading ? '...' : products?.length || 0, 
+      value: loadingProducts ? '...' : products?.length || 0, 
       icon: Package,
-      color: 'bg-primary/10 text-primary'
+      color: 'bg-primary/10 text-primary',
+      link: '/admin/products' // 👈 Clicking this goes to Product List
     },
     { 
       name: 'Categories', 
-      value: isLoading ? '...' : new Set(products?.map(p => p.category)).size || 0, 
+      value: loadingProducts ? '...' : new Set(products?.map(p => p.category)).size || 0, 
       icon: TrendingUp,
-      color: 'bg-green-100 text-green-600'
+      color: 'bg-green-100 text-green-600',
+      link: null // Not clickable
     },
     { 
       name: 'Store Views', 
-      value: '0', // Reset to 0 (was 1.2K)
+      value: stats?.views_count || 0, // 👈 Shows REAL views now
       icon: Eye,
-      color: 'bg-blue-100 text-blue-600'
+      color: 'bg-blue-100 text-blue-600',
+      link: '/' // 👈 Clicking this opens the real store
     },
     { 
       name: 'Inquiries', 
-      value: '0', // Reset to 0 (was 24)
+      value: inquiriesCount || 0, // 👈 Shows REAL count now
       icon: Users,
-      color: 'bg-purple-100 text-purple-600'
+      color: 'bg-purple-100 text-purple-600',
+      link: '/admin/inquiries' // 👈 Clicking this goes to the Inbox (We will build this next!)
     },
   ];
 
@@ -80,7 +111,7 @@ export default function AdminDashboard() {
 
         {/* Stats Grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => {
+          {statsList.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <motion.div
@@ -88,7 +119,10 @@ export default function AdminDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-card rounded-xl p-6 shadow-luxury"
+                onClick={() => stat.link && navigate(stat.link)} // 👈 This makes it Clickable!
+                className={`bg-card rounded-xl p-6 shadow-luxury transition-all ${
+                  stat.link ? 'cursor-pointer hover:shadow-lg hover:scale-[1.02]' : ''
+                }`}
               >
                 <div className={`w-12 h-12 rounded-lg ${stat.color} flex items-center justify-center mb-4`}>
                   <Icon className="w-6 h-6" />
@@ -110,26 +144,30 @@ export default function AdminDashboard() {
             Quick Actions
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <a
-              href="/admin/products/new"
-              className="flex items-center gap-3 p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors"
+            <Button
+              variant="outline"
+              className="h-auto p-4 justify-start border-border hover:border-primary hover:bg-primary/5"
+              onClick={() => navigate('/admin/products/new')}
             >
-              <Package className="w-5 h-5 text-primary" />
+              <Package className="w-5 h-5 text-primary mr-3" />
               <span className="font-sans font-medium">Add New Product</span>
-            </a>
-            <a
-              href="/admin/products"
-              className="flex items-center gap-3 p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors"
+            </Button>
+            
+            <Button
+              variant="outline"
+              className="h-auto p-4 justify-start border-border hover:border-primary hover:bg-primary/5"
+              onClick={() => navigate('/admin/products')}
             >
-              <Eye className="w-5 h-5 text-primary" />
+              <Eye className="w-5 h-5 text-primary mr-3" />
               <span className="font-sans font-medium">View All Products</span>
-            </a>
+            </Button>
+            
             <a
               href="/"
               target="_blank"
-              className="flex items-center gap-3 p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors"
+              className="flex items-center h-auto p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors"
             >
-              <TrendingUp className="w-5 h-5 text-primary" />
+              <TrendingUp className="w-5 h-5 text-primary mr-3" />
               <span className="font-sans font-medium">View Store</span>
             </a>
           </div>
