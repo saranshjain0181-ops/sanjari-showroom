@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { motion } from 'framer-motion';
-import { LayoutDashboard, Package, Plus, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Package, Plus, LogOut, Menu, X, MessageSquare } from 'lucide-react'; // 👈 Added MessageSquare
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 
+// 👇 Added 'Inquiries' to the menu
 const navItems = [
   { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'All Products', path: '/admin/products', icon: Package },
   { name: 'Add Product', path: '/admin/products/new', icon: Plus },
+  { name: 'Inquiries', path: '/admin/inquiries', icon: MessageSquare }, 
 ];
 
 export default function AdminLayout() {
@@ -20,25 +21,28 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+      
+      // 👇 FIX 1: Redirect to /auth (Login), NOT /admin
+      if (!session?.user) {
+        navigate('/auth'); 
+      }
+    });
+
+    // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setUser(session?.user ?? null);
         setLoading(false);
         
         if (!session?.user) {
-          navigate('/admin');
+          navigate('/auth'); // 👈 FIX 1: Redirect to /auth here too
         }
       }
     );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-      
-      if (!session?.user) {
-        navigate('/admin');
-      }
-    });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
@@ -46,7 +50,7 @@ export default function AdminLayout() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Logged out successfully');
-    navigate('/admin');
+    navigate('/auth'); // Redirect to login after logout
   };
 
   if (loading) {
@@ -57,6 +61,7 @@ export default function AdminLayout() {
     );
   }
 
+  // If we are finished loading and still have no user, return null (the useEffect will redirect)
   if (!user) {
     return null;
   }
@@ -66,20 +71,19 @@ export default function AdminLayout() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card rounded-lg shadow-luxury"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card rounded-lg shadow-luxury border border-border"
       >
         {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
 
-      {/* Sidebar */}
-      <motion.aside
-        initial={{ x: -280 }}
-        animate={{ x: sidebarOpen ? 0 : -280 }}
+      {/* Sidebar - FIX 2: Using Tailwind classes instead of Motion for better Desktop support */}
+      <aside
         className={`
-          fixed lg:relative lg:translate-x-0 z-40
+          fixed lg:relative z-40
           w-[280px] h-screen bg-card border-r border-border
           flex flex-col
-          lg:block
+          transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
         `}
       >
         {/* Logo */}
@@ -95,7 +99,10 @@ export default function AdminLayout() {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            // Check if active (handle root dashboard path too)
+            const isActive = location.pathname === item.path || 
+                           (item.path === '/admin/dashboard' && location.pathname === '/admin');
+            
             const Icon = item.icon;
             
             return (
@@ -134,7 +141,7 @@ export default function AdminLayout() {
             Logout
           </button>
         </div>
-      </motion.aside>
+      </aside>
 
       {/* Overlay for mobile */}
       {sidebarOpen && (
@@ -145,7 +152,7 @@ export default function AdminLayout() {
       )}
 
       {/* Main Content */}
-      <main className="flex-1 p-6 lg:p-8 overflow-auto">
+      <main className="flex-1 p-6 lg:p-8 overflow-auto w-full">
         <Outlet />
       </main>
     </div>
