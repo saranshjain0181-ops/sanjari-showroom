@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { Upload, X, ArrowLeft, GripVertical, Star, Plus, Loader2 } from 'lucide-react';
 
-// 👇 UPDATED CATEGORIES TO MATCH YOUR STOREFRONT COLLECTIONS
+// 👇 Synced Categories
 const categories = [
   "T-shirts",
   "Shirts",
@@ -529,7 +529,18 @@ export default function ProductForm() {
           />
         </div>
 
+        {/* 👇 UPDATED BUTTON AREA with DONE BUTTON */}
         <div className="flex justify-end gap-4 pt-4">
+          {/* New DONE Button - Goes to Main Dashboard */}
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => navigate('/admin')}
+            disabled={mutation.isPending || isUploading}
+          >
+            Done
+          </Button>
+
           <Button
             type="button"
             variant="outline"
@@ -538,6 +549,7 @@ export default function ProductForm() {
           >
             Cancel
           </Button>
+          
           <Button 
             type="submit" 
             className="btn-gold min-w-[150px]"
