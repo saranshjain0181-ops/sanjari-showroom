@@ -6,6 +6,14 @@ import { ArrowLeft, Mail, Clock, Trash2, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
+interface Inquiry {
+  id: string;
+  customer_name: string | null;
+  message: string;
+  status: string;
+  created_at: string;
+}
+
 export default function Inquiries() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -15,32 +23,32 @@ export default function Inquiries() {
     queryKey: ['inquiries'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('inquiries')
+        .from('inquiries' as any)
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+      return (data as unknown as Inquiry[]) || [];
     },
   });
 
   // 2. Delete Inquiry
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('inquiries').delete().eq('id', id);
+      const { error } = await supabase.from('inquiries' as any).delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inquiries'] });
-      queryClient.invalidateQueries({ queryKey: ['inquiries-count'] }); // Update dashboard count too
+      queryClient.invalidateQueries({ queryKey: ['inquiries-count'] });
       toast.success('Message deleted');
     },
   });
 
-  // 3. Mark as Read (Optional logic)
+  // 3. Mark as Read
   const markReadMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('inquiries')
+        .from('inquiries' as any)
         .update({ status: 'read' })
         .eq('id', id);
       if (error) throw error;
@@ -94,7 +102,7 @@ export default function Inquiries() {
                   </div>
                 </div>
 
-                <p className="text-gray-700 bg-muted/30 p-4 rounded-lg text-sm leading-relaxed mb-4">
+                <p className="text-foreground bg-muted/30 p-4 rounded-lg text-sm leading-relaxed mb-4">
                   {msg.message}
                 </p>
 

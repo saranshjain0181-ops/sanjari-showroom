@@ -11,7 +11,8 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
 import ProductForm from "./pages/admin/ProductForm";
-import Inquiries from "./pages/admin/Inquiries"; // 👈 1. Added Import
+import Inquiries from "./pages/admin/Inquiries";
+import AdminVideos from "./pages/admin/AdminVideos";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,8 +38,7 @@ const App = () => (
             <Route path="products" element={<AdminProducts />} />
             <Route path="products/new" element={<ProductForm />} />
             <Route path="products/:id/edit" element={<ProductForm />} />
-            
-            {/* 👇 2. Added the Inquiries Route Here */}
+            <Route path="videos" element={<AdminVideos />} />
             <Route path="inquiries" element={<Inquiries />} />
           </Route>
 
