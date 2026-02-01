@@ -17,7 +17,16 @@ import { Label } from "@/components/ui/label";
 import { toast } from 'sonner';
 import { Upload, X, ArrowLeft, GripVertical, Star, Plus, Loader2 } from 'lucide-react';
 
-const categories = ['Women', 'Men', 'Kids', 'Accessories'];
+// 👇 UPDATED CATEGORIES TO MATCH YOUR STOREFRONT COLLECTIONS
+const categories = [
+  "T-shirts",
+  "Shirts",
+  "Jeans",
+  "Hoodies",
+  "Jackets",
+  "Sherwanis"
+];
+
 const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size'];
 
 interface ProductImage {
@@ -473,7 +482,7 @@ export default function ProductForm() {
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat.toLowerCase()}>
+                  <SelectItem key={cat} value={cat}>
                     {cat}
                   </SelectItem>
                 ))}
