@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Link } from 'react-router-dom';
-import { Plus, Pencil, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom'; // 👈 Added useNavigate
+import { Plus, Pencil, Trash2, Image as ImageIcon, Check } from 'lucide-react'; // 👈 Added Check icon
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function AdminProducts() {
+  const navigate = useNavigate(); // 👈 Initialize navigation
   const queryClient = useQueryClient();
 
   const { data: products, isLoading } = useQuery({
@@ -55,7 +56,7 @@ export default function AdminProducts() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        {/* Header */}
+        {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="font-serif text-3xl text-foreground mb-2">
@@ -65,12 +66,27 @@ export default function AdminProducts() {
               Manage your product inventory
             </p>
           </div>
-          <Link to="/admin/products/new">
-            <Button className="btn-gold">
-              <Plus className="w-5 h-5 mr-2" />
-              Add Product
+          
+          {/* 👇 UPDATED BUTTONS AREA */}
+          <div className="flex gap-3">
+            {/* New Done Button */}
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/admin')}
+              className="gap-2"
+            >
+              <Check className="w-4 h-4" />
+              Done
             </Button>
-          </Link>
+
+            {/* Existing Add Product Button */}
+            <Link to="/admin/products/new">
+              <Button className="btn-gold">
+                <Plus className="w-5 h-5 mr-2" />
+                Add Product
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Products Table */}
