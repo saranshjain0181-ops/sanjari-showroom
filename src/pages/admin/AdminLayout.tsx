@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { LayoutDashboard, Package, Plus, LogOut, Menu, X, MessageSquare } from 'lucide-react'; // 👈 Added MessageSquare
+import { LayoutDashboard, Package, Plus, LogOut, Menu, X, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 
-// 👇 Added 'Inquiries' to the menu
 const navItems = [
   { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'All Products', path: '/admin/products', icon: Package },
@@ -26,9 +25,9 @@ export default function AdminLayout() {
       setUser(session?.user ?? null);
       setLoading(false);
       
-      // 👇 FIX 1: Redirect to /auth (Login), NOT /admin
+      // 👇 FIX: Redirect to /admin/login (NOT /auth or /admin)
       if (!session?.user) {
-        navigate('/auth'); 
+        navigate('/admin/login'); 
       }
     });
 
@@ -39,7 +38,7 @@ export default function AdminLayout() {
         setLoading(false);
         
         if (!session?.user) {
-          navigate('/auth'); // 👈 FIX 1: Redirect to /auth here too
+          navigate('/admin/login'); // 👈 FIX: Redirect to /admin/login here too
         }
       }
     );
@@ -50,7 +49,7 @@ export default function AdminLayout() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Logged out successfully');
-    navigate('/auth'); // Redirect to login after logout
+    navigate('/admin/login'); // 👈 FIX: Redirect to login after logout
   };
 
   if (loading) {
@@ -76,7 +75,7 @@ export default function AdminLayout() {
         {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
 
-      {/* Sidebar - FIX 2: Using Tailwind classes instead of Motion for better Desktop support */}
+      {/* Sidebar */}
       <aside
         className={`
           fixed lg:relative z-40
@@ -99,7 +98,6 @@ export default function AdminLayout() {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
           {navItems.map((item) => {
-            // Check if active (handle root dashboard path too)
             const isActive = location.pathname === item.path || 
                            (item.path === '/admin/dashboard' && location.pathname === '/admin');
             
