@@ -11,6 +11,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
 import ProductForm from "./pages/admin/ProductForm";
+import Inquiries from "./pages/admin/Inquiries"; // 👈 1. Added Import
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,12 +29,17 @@ const App = () => (
           <Route path="/product/:id" element={<ProductDetail />} />
           
           {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin/login" element={<AdminLogin />} /> {/* Note: Ensure login has its own path if possible, or keep as is if your logic handles it */}
+          
           <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} /> {/* Use index for the default dashboard view */}
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="products/new" element={<ProductForm />} />
             <Route path="products/:id/edit" element={<ProductForm />} />
+            
+            {/* 👇 2. Added the Inquiries Route Here */}
+            <Route path="inquiries" element={<Inquiries />} />
           </Route>
 
           {/* Catch-all */}
