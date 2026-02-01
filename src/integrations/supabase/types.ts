@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      content_videos: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          thumbnail_url: string | null
+          title: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          thumbnail_url?: string | null
+          title: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          thumbnail_url?: string | null
+          title?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
+      inquiries: {
+        Row: {
+          created_at: string
+          customer_name: string | null
+          id: string
+          message: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string | null
+          id?: string
+          message: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string | null
+          id?: string
+          message?: string
+          status?: string
+        }
+        Relationships: []
+      }
       product_images: {
         Row: {
           created_at: string
@@ -85,6 +136,24 @@ export type Database = {
         }
         Relationships: []
       }
+      store_stats: {
+        Row: {
+          created_at: string
+          id: string
+          views_count: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          views_count?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          views_count?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -115,6 +184,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_views: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

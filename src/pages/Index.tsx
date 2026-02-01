@@ -1,20 +1,19 @@
-import { useEffect } from "react"; // 👈 Added this
-import { supabase } from "@/integrations/supabase/client"; // 👈 Added this
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import HeroSection from '@/components/hero/HeroSection';
 import VideoShowcase from '@/components/sections/VideoShowcase';
-import CampaignTapes from '@/components/sections/CampaignTapes';
+import VideoReels from '@/components/sections/VideoReels';
 import ProductGrid from '@/components/sections/ProductGrid';
 import ContactSection from '@/components/sections/ContactSection';
 import Footer from '@/components/layout/Footer';
 import FloatingNav from '@/components/navigation/FloatingNav';
+import ChatWidget from '@/components/chat/ChatWidget';
 
 const Index = () => {
   
-  // 👇 This runs once when the page loads
   useEffect(() => {
     const countView = async () => {
-      // Calls the 'increment_views' function we made in SQL
-      await supabase.rpc('increment_views'); 
+      await supabase.rpc('increment_views' as any);
     };
     countView();
   }, []);
@@ -24,10 +23,11 @@ const Index = () => {
       <FloatingNav />
       <HeroSection />
       <VideoShowcase />
-      <CampaignTapes />
+      <VideoReels />
       <ProductGrid />
       <ContactSection />
       <Footer />
+      <ChatWidget />
     </div>
   );
 };

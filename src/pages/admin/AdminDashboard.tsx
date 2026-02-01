@@ -26,26 +26,27 @@ export default function AdminDashboard() {
     },
   });
 
-  // 2. Fetch Real View Count (From the new 'store_stats' table)
+  // 2. Fetch Real View Count (From the 'store_stats' table)
   const { data: stats } = useQuery({
     queryKey: ['store-stats'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('store_stats')
+        .from('store_stats' as any)
         .select('views_count')
-        .maybeSingle(); // Use maybeSingle to avoid errors if empty
+        .maybeSingle();
       
-      return data;
+      if (error) return { views_count: 0 };
+      return (data as unknown as { views_count: number }) || { views_count: 0 };
     },
   });
 
-  // 3. Fetch Real Inquiries Count (From the new 'inquiries' table)
+  // 3. Fetch Real Inquiries Count (From the 'inquiries' table)
   const { data: inquiriesCount } = useQuery({
     queryKey: ['inquiries-count'],
     queryFn: async () => {
       const { count, error } = await supabase
-        .from('inquiries')
-        .select('*', { count: 'exact', head: true }); // 'head: true' just counts rows
+        .from('inquiries' as any)
+        .select('*', { count: 'exact', head: true });
       
       if (error) return 0;
       return count;
@@ -58,28 +59,28 @@ export default function AdminDashboard() {
       value: loadingProducts ? '...' : products?.length || 0, 
       icon: Package,
       color: 'bg-primary/10 text-primary',
-      link: '/admin/products' // 👈 Clicking this goes to Product List
+      link: '/admin/products'
     },
     { 
       name: 'Categories', 
       value: loadingProducts ? '...' : new Set(products?.map(p => p.category)).size || 0, 
       icon: TrendingUp,
       color: 'bg-green-100 text-green-600',
-      link: null // Not clickable
+      link: null
     },
     { 
       name: 'Store Views', 
-      value: stats?.views_count || 0, // 👈 Shows REAL views now
+      value: stats?.views_count || 0,
       icon: Eye,
       color: 'bg-blue-100 text-blue-600',
-      link: '/' // 👈 Clicking this opens the real store
+      link: '/'
     },
     { 
       name: 'Inquiries', 
-      value: inquiriesCount || 0, // 👈 Shows REAL count now
+      value: inquiriesCount || 0,
       icon: Users,
       color: 'bg-purple-100 text-purple-600',
-      link: '/admin/inquiries' // 👈 Clicking this goes to the Inbox (We will build this next!)
+      link: '/admin/inquiries'
     },
   ];
 
@@ -119,7 +120,7 @@ export default function AdminDashboard() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                onClick={() => stat.link && navigate(stat.link)} // 👈 This makes it Clickable!
+                onClick={() => stat.link && navigate(stat.link)}
                 className={`bg-card rounded-xl p-6 shadow-luxury transition-all ${
                   stat.link ? 'cursor-pointer hover:shadow-lg hover:scale-[1.02]' : ''
                 }`}
@@ -165,6 +166,7 @@ export default function AdminDashboard() {
             <a
               href="/"
               target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center h-auto p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-colors"
             >
               <TrendingUp className="w-5 h-5 text-primary mr-3" />

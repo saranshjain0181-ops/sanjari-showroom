@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { LayoutDashboard, Package, Plus, LogOut, Menu, X, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Package, Plus, LogOut, Menu, X, MessageSquare, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
 
@@ -9,6 +9,7 @@ const navItems = [
   { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'All Products', path: '/admin/products', icon: Package },
   { name: 'Add Product', path: '/admin/products/new', icon: Plus },
+  { name: 'Videos', path: '/admin/videos', icon: Video },
   { name: 'Inquiries', path: '/admin/inquiries', icon: MessageSquare }, 
 ];
 

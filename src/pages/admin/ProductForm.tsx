@@ -49,7 +49,6 @@ export default function ProductForm() {
     category: '',
     material: '',
     description: '',
-    price: '',
     sizes: [] as string[],
     image_url: '', // Kept for backward compatibility
   });
@@ -98,7 +97,6 @@ export default function ProductForm() {
         category: productData.category,
         material: productData.material || '',
         description: productData.description || '',
-        price: productData.price.toString(),
         sizes: productData.sizes || [],
         image_url: productData.image_url || '',
       });
@@ -266,8 +264,11 @@ export default function ProductForm() {
         const { error } = await supabase
           .from('products')
           .update({ 
-            ...data, 
-            price: parseFloat(data.price),
+            name: data.name,
+            category: data.category,
+            material: data.material,
+            description: data.description,
+            sizes: data.sizes,
             // Only update image_url here if we already have a valid URL (not a blob)
             image_url: mainImageUrl.startsWith('blob:') ? undefined : mainImageUrl
           })
@@ -277,8 +278,11 @@ export default function ProductForm() {
         const { data: newProduct, error } = await supabase
           .from('products')
           .insert([{ 
-            ...data, 
-            price: parseFloat(data.price),
+            name: data.name,
+            category: data.category,
+            material: data.material,
+            description: data.description,
+            sizes: data.sizes,
             image_url: '' // Placeholder, will update after image upload
           }])
           .select('id')
@@ -458,38 +462,6 @@ export default function ProductForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="price">Price (₹)</Label>
-            <Input
-              id="price"
-              type="number"
-              required
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              placeholder="0.00"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => setFormData({ ...formData, category: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
             <Label htmlFor="material">Material</Label>
             <Input
               id="material"
@@ -498,6 +470,25 @@ export default function ProductForm() {
               placeholder="e.g. 100% Cotton"
             />
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="category">Category</Label>
+          <Select
+            value={formData.category}
+            onValueChange={(value) => setFormData({ ...formData, category: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
