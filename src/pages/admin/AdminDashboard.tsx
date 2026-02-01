@@ -1,9 +1,19 @@
 import { motion } from 'framer-motion';
-import { Package, Eye, TrendingUp, Users } from 'lucide-react';
+import { Package, Eye, TrendingUp, Users, LogOut } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+
+  // Logout Logic
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/"); // Go to homepage after logout
+  };
+
   const { data: products, isLoading } = useQuery({
     queryKey: ['products-count'],
     queryFn: async () => {
@@ -30,13 +40,13 @@ export default function AdminDashboard() {
     },
     { 
       name: 'Store Views', 
-      value: '1.2K', 
+      value: '0', // Reset to 0 (was 1.2K)
       icon: Eye,
       color: 'bg-blue-100 text-blue-600'
     },
     { 
       name: 'Inquiries', 
-      value: '24', 
+      value: '0', // Reset to 0 (was 24)
       icon: Users,
       color: 'bg-purple-100 text-purple-600'
     },
@@ -48,14 +58,24 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="font-serif text-3xl text-foreground mb-2">
-            Dashboard
-          </h1>
-          <p className="text-muted-foreground font-sans">
-            Welcome back! Here's an overview of your store.
-          </p>
+        {/* Header with Logout Button */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="font-serif text-3xl text-foreground mb-2">
+              Dashboard
+            </h1>
+            <p className="text-muted-foreground font-sans">
+              Welcome back! Here's an overview of your store.
+            </p>
+          </div>
+          <Button 
+            onClick={handleLogout} 
+            variant="outline" 
+            className="text-red-600 border-red-200 hover:bg-red-50"
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
         </div>
 
         {/* Stats Grid */}
