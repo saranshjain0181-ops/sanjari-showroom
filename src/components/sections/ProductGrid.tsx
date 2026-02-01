@@ -1,58 +1,47 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Eye } from 'lucide-react';
+import { Eye, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
-// Sample products data - Men's categories only
-const products = [
-  {
-    id: 1,
-    name: 'Classic Cotton Tee',
-    category: 'T-shirts',
-    image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=600&fit=crop',
-  },
-  {
-    id: 2,
-    name: 'Premium Sherwani',
-    category: 'Sherwanis',
-    image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&h=600&fit=crop',
-  },
-  {
-    id: 3,
-    name: 'Slim Fit Denim',
-    category: 'Jeans',
-    image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&h=600&fit=crop',
-  },
-  {
-    id: 4,
-    name: 'Casual Oxford Shirt',
-    category: 'Shirts',
-    image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&h=600&fit=crop',
-  },
-  {
-    id: 5,
-    name: 'Urban Hoodie',
-    category: 'Hoodies',
-    image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&h=600&fit=crop',
-  },
-  {
-    id: 6,
-    name: 'Leather Jacket',
-    category: 'Jackets',
-    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&h=600&fit=crop',
-  },
-];
+// Standard categories to show in tabs
+const CATEGORIES = ["All", "T-shirts", "Shirts", "Jeans", "Hoodies", "Jackets", "Sherwanis"];
 
 export default function ProductGrid() {
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  // 1. Fetch Real Products from Supabase
+  const { data: products, isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false }); // Newest first
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // 2. Filter Logic (Case-Insensitive Fix for "Jeans" vs "JEANS")
+  const filteredProducts = products?.filter((product) => {
+    if (selectedCategory === "All") return true;
+    return product.category?.toLowerCase() === selectedCategory.toLowerCase();
+  });
+
   return (
     <section id="collections" className="py-20 bg-background">
       <div className="container mx-auto px-4">
+        
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
           <span className="text-primary font-sans text-sm font-semibold tracking-[0.3em] uppercase">
             Curated Selection
@@ -63,9 +52,44 @@ export default function ProductGrid() {
           <div className="divider-warm w-24 mx-auto mt-4" />
         </motion.div>
 
-        {/* Masonry-like Grid */}
+        {/* Category Tabs */}
+        <div className="flex flex-wrap justify-center gap-3 mb-12">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`
+                px-6 py-2 rounded-full font-sans text-sm font-medium transition-all duration-300 border
+                ${selectedCategory === cat 
+                  ? 'bg-primary text-primary-foreground border-primary shadow-lg scale-105' 
+                  : 'bg-transparent text-muted-foreground border-border hover:border-primary hover:text-foreground'
+                }
+              `}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center py-20">
+            <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && filteredProducts?.length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-muted-foreground font-sans text-lg">
+              No products found in "{selectedCategory}".
+            </p>
+          </div>
+        )}
+
+        {/* Product Grid */}
         <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-          {products.map((product, index) => (
+          {filteredProducts?.map((product, index) => (
             <motion.div
               key={product.id}
               initial={{ opacity: 0, y: 30 }}
@@ -74,53 +98,49 @@ export default function ProductGrid() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="break-inside-avoid"
             >
-              <div className="product-card group">
+              <div className="product-card group bg-card rounded-xl overflow-hidden shadow-sm hover:shadow-luxury transition-all duration-500">
                 {/* Image Container */}
-                <div className="relative overflow-hidden">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
+                <div className="relative overflow-hidden aspect-[3/4]">
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+                      No Image
+                    </div>
+                  )}
                   
                   {/* Overlay on Hover */}
-                  <div className="absolute inset-0 bg-jet/0 group-hover:bg-jet/30 transition-colors duration-300" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
                   
                   {/* Quick View Button */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileHover={{ opacity: 1, y: 0 }}
-                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  >
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <Link
                       to={`/product/${product.id}`}
-                      className="flex items-center gap-2 bg-background text-foreground px-6 py-3 rounded-full font-sans font-medium shadow-luxury hover:shadow-luxury-lg transition-shadow"
+                      className="flex items-center gap-2 bg-white/90 backdrop-blur-sm text-foreground px-6 py-3 rounded-full font-sans font-medium shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
                     >
                       <Eye className="w-5 h-5" />
-                      Quick View
+                      View Details
                     </Link>
-                  </motion.div>
+                  </div>
 
                   {/* Category Badge */}
-                  <span className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider">
+                  <span className="absolute top-4 left-4 bg-primary/90 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider shadow-sm">
                     {product.category}
                   </span>
                 </div>
 
                 {/* Product Info */}
-                <div className="p-5">
-                  <h3 className="font-serif text-xl text-foreground mb-3">
+                <div className="p-5 text-center">
+                  <h3 className="font-serif text-xl text-foreground mb-2 group-hover:text-primary transition-colors">
                     {product.name}
                   </h3>
-                  <Link
-                    to={`/product/${product.id}`}
-                    className="inline-flex items-center gap-2 text-primary font-sans font-semibold text-sm hover:gap-3 transition-all"
-                  >
-                    View Details
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </Link>
+                  <p className="text-muted-foreground font-sans font-medium">
+                    ₹{product.price}
+                  </p>
                 </div>
               </div>
             </motion.div>
@@ -132,16 +152,13 @@ export default function ProductGrid() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mt-12"
+          className="text-center mt-16"
         >
           <Link
             to="/collections"
-            className="btn-gold inline-flex items-center gap-2 font-sans"
+            className="btn-gold inline-flex items-center gap-2 font-sans px-8 py-4 text-lg"
           >
             View All Collections
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
           </Link>
         </motion.div>
       </div>
