@@ -18,29 +18,57 @@ export default function AdminLayout() {
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Check if user has admin role
+  const checkAdminRole = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (!data || error) {
+      toast.error('Admin access required');
+      await supabase.auth.signOut();
+      navigate('/admin/login');
+      return false;
+    }
+    
+    setIsAdmin(true);
+    return true;
+  };
 
   useEffect(() => {
     // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-      
-      // 👇 FIX: Redirect to /admin/login (NOT /auth or /admin)
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) {
-        navigate('/admin/login'); 
+        setLoading(false);
+        navigate('/admin/login');
+        return;
       }
+      
+      setUser(session.user);
+      await checkAdminRole(session.user.id);
+      setLoading(false);
     });
 
     // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
+      async (event, session) => {
         if (!session?.user) {
-          navigate('/admin/login'); // 👈 FIX: Redirect to /admin/login here too
+          setUser(null);
+          setIsAdmin(false);
+          setLoading(false);
+          navigate('/admin/login');
+          return;
         }
+        
+        setUser(session.user);
+        await checkAdminRole(session.user.id);
+        setLoading(false);
       }
     );
 
@@ -50,7 +78,7 @@ export default function AdminLayout() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Logged out successfully');
-    navigate('/admin/login'); // 👈 FIX: Redirect to login after logout
+    navigate('/admin/login');
   };
 
   if (loading) {
@@ -61,8 +89,8 @@ export default function AdminLayout() {
     );
   }
 
-  // If we are finished loading and still have no user, return null (the useEffect will redirect)
-  if (!user) {
+  // Require both authentication AND admin role
+  if (!user || !isAdmin) {
     return null;
   }
 
