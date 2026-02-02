@@ -48,20 +48,6 @@ export default function AdminLayout() {
       return true;
     }
 
-    // Check 3: profiles Table (Legacy Backup)
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .eq('role', 'admin')
-      .maybeSingle();
-
-    if (profileData) {
-      console.log('Admin confirmed via profiles table');
-      setIsAdmin(true);
-      return true;
-    }
-
     // If all checks fail:
     console.error('Admin check failed. Metadata:', metaRole);
     toast.error('Admin access required');
