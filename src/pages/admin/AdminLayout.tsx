@@ -3,7 +3,7 @@ import { useNavigate, Outlet, Link, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { LayoutDashboard, Package, Plus, LogOut, Menu, X, MessageSquare, Video } from 'lucide-react';
 import { toast } from 'sonner';
-import type { User } from '@supabase/supabase-js';
+import type { User, Session } from '@supabase/supabase-js';
 
 const navItems = [
   { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -21,28 +21,57 @@ export default function AdminLayout() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Check if user has admin role
-  const checkAdminRole = async (userId: string) => {
-    const { data, error } = await supabase
+  // ROBUST ADMIN CHECK
+  const checkAdminRole = async (session: Session | null) => {
+    if (!session?.user) return false;
+
+    // Check 1: User Metadata (Fastest & Most Reliable)
+    // We set this in the SQL script earlier
+    const metaRole = session.user.user_metadata?.role || session.user.app_metadata?.role;
+    if (metaRole === 'admin') {
+      console.log('Admin confirmed via Metadata');
+      setIsAdmin(true);
+      return true;
+    }
+
+    // Check 2: user_roles Table (Database Backup)
+    const { data: roleData } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', userId)
+      .eq('user_id', session.user.id)
       .eq('role', 'admin')
       .maybeSingle();
 
-    if (!data || error) {
-      toast.error('Admin access required');
-      await supabase.auth.signOut();
-      navigate('/admin/login');
-      return false;
+    if (roleData) {
+      console.log('Admin confirmed via user_roles table');
+      setIsAdmin(true);
+      return true;
     }
-    
-    setIsAdmin(true);
-    return true;
+
+    // Check 3: profiles Table (Legacy Backup)
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (profileData) {
+      console.log('Admin confirmed via profiles table');
+      setIsAdmin(true);
+      return true;
+    }
+
+    // If all checks fail:
+    console.error('Admin check failed. Metadata:', metaRole);
+    toast.error('Admin access required');
+    await supabase.auth.signOut();
+    navigate('/admin/login');
+    return false;
   };
 
   useEffect(() => {
-    // Check active session
+    // Initial Session Check
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) {
         setLoading(false);
@@ -51,14 +80,14 @@ export default function AdminLayout() {
       }
       
       setUser(session.user);
-      await checkAdminRole(session.user.id);
+      await checkAdminRole(session);
       setLoading(false);
     });
 
-    // Listen for changes
+    // Listen for Auth Changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!session?.user) {
+        if (event === 'SIGNED_OUT' || !session?.user) {
           setUser(null);
           setIsAdmin(false);
           setLoading(false);
@@ -67,7 +96,10 @@ export default function AdminLayout() {
         }
         
         setUser(session.user);
-        await checkAdminRole(session.user.id);
+        // Only re-check if we aren't already confirmed as admin
+        if (!isAdmin) {
+          await checkAdminRole(session);
+        }
         setLoading(false);
       }
     );
