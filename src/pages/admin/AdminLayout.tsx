@@ -21,35 +21,63 @@ export default function AdminLayout() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // ROBUST ADMIN CHECK
+  // ROBUST ADMIN CHECK - Multiple fallbacks with error handling
   const checkAdminRole = async (session: Session | null) => {
     if (!session?.user) return false;
 
-    // Check 1: User Metadata (Fastest & Most Reliable)
-    // We set this in the SQL script earlier
+    console.log('🔍 Starting admin check for user:', session.user.id);
+
+    // Check 1: User Metadata (Fastest - instant, no DB call)
     const metaRole = session.user.user_metadata?.role || session.user.app_metadata?.role;
+    console.log('📋 Metadata role:', metaRole);
     if (metaRole === 'admin') {
-      console.log('Admin confirmed via Metadata');
+      console.log('✅ Admin confirmed via Metadata');
       setIsAdmin(true);
       return true;
     }
 
-    // Check 2: user_roles Table (Database Backup)
-    const { data: roleData } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', session.user.id)
-      .eq('role', 'admin')
-      .maybeSingle();
+    // Check 2: user_roles Table (Database check with error handling)
+    try {
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
 
-    if (roleData) {
-      console.log('Admin confirmed via user_roles table');
-      setIsAdmin(true);
-      return true;
+      console.log('📊 user_roles query:', { roleData, error: roleError?.message });
+
+      if (roleData && !roleError) {
+        console.log('✅ Admin confirmed via user_roles table');
+        setIsAdmin(true);
+        return true;
+      }
+
+      if (roleError) {
+        console.warn('⚠️ user_roles query error (trying next check):', roleError.message);
+      }
+    } catch (err) {
+      console.warn('⚠️ user_roles check exception:', err);
     }
 
-    // If all checks fail:
-    console.error('Admin check failed. Metadata:', metaRole);
+    // Check 3: Use the current_user_has_role database function (most reliable, bypasses RLS)
+    try {
+      const { data: hasRoleResult, error: rpcError } = await supabase
+        .rpc('current_user_has_role', { _role: 'admin' });
+
+      console.log('🔧 current_user_has_role result:', { hasRoleResult, error: rpcError?.message });
+
+      if (hasRoleResult === true && !rpcError) {
+        console.log('✅ Admin confirmed via current_user_has_role function');
+        setIsAdmin(true);
+        return true;
+      }
+    } catch (err) {
+      console.warn('⚠️ RPC check exception:', err);
+    }
+
+    // All checks failed - redirect to login
+    console.error('❌ All admin checks failed for user:', session.user.id);
     toast.error('Admin access required');
     await supabase.auth.signOut();
     navigate('/admin/login');
