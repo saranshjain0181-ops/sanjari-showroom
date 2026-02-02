@@ -51,6 +51,7 @@ export default function ProductForm() {
     description: '',
     sizes: [] as string[],
     image_url: '', // Kept for backward compatibility
+    price: '' as string, // Price as string for input handling
   });
 
   const [productImages, setProductImages] = useState<ProductImage[]>([]);
@@ -99,6 +100,7 @@ export default function ProductForm() {
         description: productData.description || '',
         sizes: productData.sizes || [],
         image_url: productData.image_url || '',
+        price: productData.price?.toString() || '',
       });
     }
   }, [productData]);
@@ -269,6 +271,7 @@ export default function ProductForm() {
             material: data.material,
             description: data.description,
             sizes: data.sizes,
+            price: data.price ? parseFloat(data.price) : null,
             // Only update image_url here if we already have a valid URL (not a blob)
             image_url: mainImageUrl.startsWith('blob:') ? undefined : mainImageUrl
           })
@@ -283,6 +286,7 @@ export default function ProductForm() {
             material: data.material,
             description: data.description,
             sizes: data.sizes,
+            price: data.price ? parseFloat(data.price) : null,
             image_url: '' // Placeholder, will update after image upload
           }])
           .select('id')
@@ -333,6 +337,10 @@ export default function ProductForm() {
     e.preventDefault();
     if (productImages.length === 0) {
       toast.error('Please add at least one image');
+      return;
+    }
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      toast.error('Please enter a valid price');
       return;
     }
     mutation.mutate(formData);
@@ -468,6 +476,19 @@ export default function ProductForm() {
               value={formData.material}
               onChange={(e) => setFormData({ ...formData, material: e.target.value })}
               placeholder="e.g. 100% Cotton"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="price">Price (₹) *</Label>
+            <Input
+              id="price"
+              type="number"
+              step="0.01"
+              min="0"
+              required
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              placeholder="e.g. 1999.00"
             />
           </div>
         </div>
