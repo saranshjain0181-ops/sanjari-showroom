@@ -138,8 +138,8 @@ export default function ProductGrid() {
                   <h3 className="font-serif text-xl text-foreground mb-2 group-hover:text-primary transition-colors">
                     {product.name}
                   </h3>
-                  <p className="text-muted-foreground font-sans font-medium">
-                    ₹{product.price}
+                  <p className="text-muted-foreground font-sans text-sm line-clamp-2">
+                    {product.material || product.category}
                   </p>
                 </div>
               </div>
