@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import HeroSection from '@/components/hero/HeroSection';
-import VideoShowcase from '@/components/sections/VideoShowcase';
-import VideoReels from '@/components/sections/VideoReels';
+import VideoShowcase from '@/components/sections/VideoShowcase'; // <--- RESTORED
+import VideoReels from '@/components/sections/VideoReels';       // <--- RESTORED
+import NewArrivals from '@/components/sections/NewArrivals';     // <--- NEW DYNAMIC SECTION
 import ProductGrid from '@/components/sections/ProductGrid';
 import ContactSection from '@/components/sections/ContactSection';
 import Footer from '@/components/layout/Footer';
@@ -22,8 +23,16 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <FloatingNav />
       <HeroSection />
+      
+      {/* 1. Your original video section (The one you wanted to keep) */}
       <VideoShowcase />
+      
+      {/* 2. Your original reels section */}
       <VideoReels />
+      
+      {/* 3. The NEW dynamic section (Only shows videos you upload in Admin) */}
+      <NewArrivals />
+      
       <ProductGrid />
       <ContactSection />
       <Footer />
