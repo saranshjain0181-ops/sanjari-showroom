@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import HeroSection from '@/components/hero/HeroSection';
-import VideoShowcase from '@/components/sections/VideoShowcase'; // <--- The Big Video
-import NewArrivals from '@/components/sections/NewArrivals';     // <--- Your Drops
+import VideoShowcase from '@/components/sections/VideoShowcase'; // The Big Video (Full Screen)
+import NewArrivals from '@/components/sections/NewArrivals';     // The Yellow Button Grid (Dynamic)
 import ProductGrid from '@/components/sections/ProductGrid';
 import ContactSection from '@/components/sections/ContactSection';
 import Footer from '@/components/layout/Footer';
@@ -22,15 +22,13 @@ const Index = () => {
       <FloatingNav />
       <HeroSection />
       
-      {/* 1. Big Cinematic Video */}
+      {/* 1. Big Attraction Video */}
       <VideoShowcase /> 
 
-      {/* 2. New Arrivals (Uploaded from Admin) */}
+      {/* 2. Your Uploaded Videos (Yellow Button Style) */}
       <NewArrivals />   
 
-      {/* 3. Main Product Grid */}
       <ProductGrid />
-      
       <ContactSection />
       <Footer />
       <ChatWidget />
