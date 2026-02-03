@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Collections from "./pages/Collections";
 import Videos from "./pages/Videos";
+import About from "./pages/About"; // <--- 1. NEW IMPORT ADDED HERE
 import ProductDetail from "./pages/ProductDetail";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -29,13 +30,14 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/videos" element={<Videos />} />
+          <Route path="/about" element={<About />} /> {/* <--- 2. NEW ROUTE ADDED HERE */}
           <Route path="/product/:id" element={<ProductDetail />} />
           
           {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} /> {/* Note: Ensure login has its own path if possible, or keep as is if your logic handles it */}
+          <Route path="/admin/login" element={<AdminLogin />} />
           
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} /> {/* Use index for the default dashboard view */}
+            <Route index element={<AdminDashboard />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="products/new" element={<ProductForm />} />
