@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('');
-  const [phone, setPhone] = useState(''); // New State for Phone
+  const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -15,7 +14,6 @@ export default function ChatWidget() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // VALIDATION: Check if phone is empty (Double check)
     if (!phone.trim()) {
       toast({
         title: "Phone number required",
@@ -30,16 +28,9 @@ export default function ChatWidget() {
     setIsSubmitting(true);
 
     try {
-      // Sending data to Supabase (Ensure your table has a 'phone' column if needed, 
-      // otherwise it might just ignore it depending on your setup. 
-      // If you haven't set up a table, this might just simulate a success for now)
-      
       console.log("Submitting inquiry:", { name, phone, message });
-
-      // Simulate network request or real Supabase insert
-      // await supabase.from('inquiries').insert({ name, phone, message });
       
-      // Fake delay for better UX
+      // Simulate delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       toast({
@@ -47,7 +38,6 @@ export default function ChatWidget() {
         description: "We'll get back to you shortly.",
       });
 
-      // Reset Form
       setName('');
       setPhone('');
       setMessage('');
@@ -65,26 +55,32 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* TOGGLE BUTTON */}
+      {/* TOGGLE BUTTON - TOP RIGHT */}
       <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
         onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-lg transition-colors duration-300 ${
-          isOpen ? 'bg-transparent text-transparent pointer-events-none' : 'bg-[#D4AF37] text-white hover:bg-[#b5952f]'
+        className={`fixed top-6 right-6 z-50 px-6 py-3 rounded-full shadow-lg transition-all duration-300 flex items-center gap-2 font-medium tracking-wide ${
+          isOpen 
+            ? 'opacity-0 pointer-events-none scale-90' 
+            : 'bg-[#D4AF37] text-white hover:bg-[#b5952f] hover:scale-105'
         }`}
       >
-        <MessageCircle size={24} />
+        <MessageCircle size={20} />
+        {/* Text is visible on all screens, or you can use 'hidden md:inline' to hide text on mobile */}
+        <span>Send Inquiry</span>
       </motion.button>
 
-      {/* CHAT WINDOW */}
+      {/* CHAT WINDOW - ANCHORED TOP RIGHT */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            // Animation: Slide down from top
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-[90vw] md:w-[350px] bg-background border border-border rounded-2xl shadow-2xl overflow-hidden"
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            // Position: Just below the top button (top-24)
+            className="fixed top-24 right-6 z-50 w-[90vw] md:w-[350px] bg-background border border-border rounded-2xl shadow-2xl overflow-hidden"
           >
             {/* HEADER */}
             <div className="bg-[#D4AF37] p-4 flex justify-between items-center text-white">
@@ -102,8 +98,6 @@ export default function ChatWidget() {
 
             {/* FORM */}
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              
-              {/* Name Field (Optional) */}
               <input
                 type="text"
                 placeholder="Your name (optional)"
@@ -112,27 +106,24 @@ export default function ChatWidget() {
                 className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-transparent focus:border-[#D4AF37] focus:bg-background outline-none transition-all text-sm"
               />
 
-              {/* PHONE Field (Compulsory/Required) */}
               <input
                 type="tel"
                 placeholder="Phone Number (Required)"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                required // <--- HTML validation
+                required
                 className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-transparent focus:border-[#D4AF37] focus:bg-background outline-none transition-all text-sm"
               />
 
-              {/* Message Field (Required) */}
               <textarea
                 placeholder="How can we help you?"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                required // <--- HTML validation
+                required
                 rows={4}
                 className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-transparent focus:border-[#D4AF37] focus:bg-background outline-none transition-all text-sm resize-none"
               />
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isSubmitting}
