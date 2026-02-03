@@ -2,13 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Mail, Clock, Trash2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Mail, Clock, Trash2, CheckCircle, Phone } from 'lucide-react'; // Added Phone icon
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface Inquiry {
   id: string;
   customer_name: string | null;
+  phone?: string | null; // Added phone field
   message: string;
   status: string;
   created_at: string;
@@ -89,7 +90,7 @@ export default function Inquiries() {
                 key={msg.id} 
                 className={`bg-card p-6 rounded-xl shadow-sm border border-border transition-all hover:shadow-md ${msg.status === 'unread' ? 'border-l-4 border-l-primary' : ''}`}
               >
-                <div className="flex justify-between items-start mb-3">
+                <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-lg text-foreground">{msg.customer_name || 'Anonymous'}</span>
                     {msg.status === 'unread' && (
@@ -101,6 +102,20 @@ export default function Inquiries() {
                     {new Date(msg.created_at).toLocaleDateString()}
                   </div>
                 </div>
+
+                {/* --- NEW: PHONE NUMBER SECTION --- */}
+                {msg.phone && (
+                  <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
+                    <Phone className="w-4 h-4 text-primary/70" />
+                    <a 
+                      href={`tel:${msg.phone}`} 
+                      className="hover:text-primary hover:underline transition-colors font-medium"
+                    >
+                      {msg.phone}
+                    </a>
+                  </div>
+                )}
+                {/* -------------------------------- */}
 
                 <p className="text-foreground bg-muted/30 p-4 rounded-lg text-sm leading-relaxed mb-4">
                   {msg.message}
