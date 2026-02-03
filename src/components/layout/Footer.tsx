@@ -5,10 +5,19 @@ import { Link } from 'react-router-dom';
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
+  // Defined links to ensure every button goes to the right place
+  const links = [
+    { name: 'Home', path: '/' },
+    { name: 'Collections', path: '/collections' },
+    { name: 'About Us', path: '/about' }, // <--- Connected to your new page
+    { name: 'Contact', path: '/#contact' } // <--- Scrolls to contact section
+  ];
+
   return (
     <footer className="bg-foreground text-background py-16">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-3 gap-12 mb-12">
+          
           {/* Brand */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -24,7 +33,7 @@ export default function Footer() {
             </p>
           </motion.div>
 
-          {/* Quick Links */}
+          {/* Quick Links (FIXED LOGIC) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -35,22 +44,23 @@ export default function Footer() {
               Quick Links
             </h4>
             <ul className="space-y-3 font-sans">
-              {['Home', 'Collections', 'About Us', 'Contact'].map((link) => (
-                <li key={link}>
-                  {link === 'Collections' ? (
-                    <Link 
-                      to="/collections"
-                      className="text-background/70 hover:text-primary transition-colors"
-                    >
-                      {link}
-                    </Link>
-                  ) : (
+              {links.map((link) => (
+                <li key={link.name}>
+                  {/* Logic: Use <a> for Contact hash to force scroll, <Link> for pages */}
+                  {link.name === 'Contact' ? (
                     <a 
-                      href="#" 
+                      href={link.path}
                       className="text-background/70 hover:text-primary transition-colors"
                     >
-                      {link}
+                      {link.name}
                     </a>
+                  ) : (
+                    <Link 
+                      to={link.path}
+                      className="text-background/70 hover:text-primary transition-colors"
+                    >
+                      {link.name}
+                    </Link>
                   )}
                 </li>
               ))}
