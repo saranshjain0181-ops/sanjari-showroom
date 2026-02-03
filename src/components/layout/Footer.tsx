@@ -5,12 +5,13 @@ import { Link } from 'react-router-dom';
 export default function Footer() {
   const currentYear = new Date().getFullYear();
 
-  // Defined links to ensure every button goes to the right place
+  // Defined links
   const links = [
     { name: 'Home', path: '/' },
     { name: 'Collections', path: '/collections' },
-    { name: 'About Us', path: '/about' }, // <--- Connected to your new page
-    { name: 'Contact', path: '/#contact' } // <--- Scrolls to contact section
+    { name: 'About Us', path: '/about' },
+    // Points to the ID 'contact' on the home page
+    { name: 'Contact', path: '/#contact' } 
   ];
 
   return (
@@ -33,7 +34,7 @@ export default function Footer() {
             </p>
           </motion.div>
 
-          {/* Quick Links (FIXED LOGIC) */}
+          {/* Quick Links */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -46,11 +47,11 @@ export default function Footer() {
             <ul className="space-y-3 font-sans">
               {links.map((link) => (
                 <li key={link.name}>
-                  {/* Logic: Use <a> for Contact hash to force scroll, <Link> for pages */}
+                  {/* LOGIC: If it's 'Contact', use standard <a> tag to force scroll to ID */}
                   {link.name === 'Contact' ? (
                     <a 
                       href={link.path}
-                      className="text-background/70 hover:text-primary transition-colors"
+                      className="text-background/70 hover:text-primary transition-colors cursor-pointer"
                     >
                       {link.name}
                     </a>
