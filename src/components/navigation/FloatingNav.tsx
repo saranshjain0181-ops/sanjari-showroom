@@ -1,16 +1,37 @@
 import { motion } from 'framer-motion';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, ShoppingBag, MapPin, User } from 'lucide-react';
 
 const navItems = [
   { name: 'Home', path: '/', icon: Home },
   { name: 'Collections', path: '/collections', icon: ShoppingBag },
-  { name: 'Visit Store', path: '/#contact', icon: MapPin },
+  { name: 'Visit Store', path: '#contact', icon: MapPin, isAnchor: true },
   { name: 'Admin', path: '/admin', icon: User },
 ];
 
 export default function FloatingNav() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleNavClick = (item: typeof navItems[0], e: React.MouseEvent) => {
+    if (item.isAnchor) {
+      e.preventDefault();
+      
+      // If not on home page, navigate there first
+      if (location.pathname !== '/') {
+        navigate('/');
+        // Wait for navigation then scroll
+        setTimeout(() => {
+          const element = document.getElementById('contact');
+          element?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      } else {
+        // Already on home page, just scroll
+        const element = document.getElementById('contact');
+        element?.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
     <motion.nav
@@ -24,6 +45,25 @@ export default function FloatingNav() {
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
+            
+            if (item.isAnchor) {
+              return (
+                <li key={item.name}>
+                  <a
+                    href={item.path}
+                    onClick={(e) => handleNavClick(item, e)}
+                    className={`
+                      flex items-center gap-2 px-4 py-2.5 rounded-full
+                      font-sans text-sm font-medium transition-all duration-300
+                      text-foreground hover:bg-muted cursor-pointer
+                    `}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden md:inline">{item.name}</span>
+                  </a>
+                </li>
+              );
+            }
             
             return (
               <li key={item.name}>

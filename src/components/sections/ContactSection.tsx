@@ -1,12 +1,15 @@
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Clock, MessageCircle } from 'lucide-react';
 
+const STORE_ADDRESS = "SANJARI, 567, Mahatma Gandhi Rd, Opposite High Court, Nehru Park 2, Dhenu Market, Indore, Madhya Pradesh 452003";
+const GOOGLE_MAPS_LINK = `https://maps.google.com/?q=${encodeURIComponent(STORE_ADDRESS)}`;
+
 const contactInfo = [
   {
     icon: MapPin,
     label: 'Address',
-    value: '123 MG Road, Indore, Madhya Pradesh 452001',
-    link: 'https://maps.google.com/?q=Indore,India'
+    value: STORE_ADDRESS,
+    link: GOOGLE_MAPS_LINK
   },
   {
     icon: Phone,
@@ -111,22 +114,37 @@ export default function ContactSection() {
             </motion.a>
           </motion.div>
 
-          {/* Map Link */}
+          {/* Satellite Google Map */}
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="flex items-center justify-center rounded-2xl bg-background shadow-luxury-lg h-[400px] lg:h-full min-h-[400px]"
+            className="rounded-2xl overflow-hidden shadow-luxury-lg h-[400px] lg:h-full min-h-[400px]"
           >
             <a
-              href="https://www.google.com/maps/search/?api=1&query=123MGRoad,Indore,MadhyaPradesh452001"
+              href={GOOGLE_MAPS_LINK}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 btn-gold text-lg px-8 py-4"
+              className="block w-full h-full relative group"
             >
-              <MapPin className="w-6 h-6" />
-              View on Google Maps
+              <iframe
+                src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3680.123!2d75.857!3d22.719!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s${encodeURIComponent(STORE_ADDRESS)}!5e1!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin`}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="pointer-events-none"
+                title="Sanjari Fashion Store Location"
+              />
+              <div className="absolute inset-0 bg-transparent group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                <span className="opacity-0 group-hover:opacity-100 transition-opacity bg-primary text-primary-foreground px-4 py-2 rounded-full font-sans font-medium flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Open in Google Maps
+                </span>
+              </div>
             </a>
           </motion.div>
         </div>
