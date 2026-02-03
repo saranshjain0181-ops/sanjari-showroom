@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, ShoppingBag, MapPin, User, Info } from 'lucide-react';
 
+
 const navItems = [
   { name: 'Home', path: '/', icon: Home },
   { name: 'Collections', path: '/collections', icon: ShoppingBag },
