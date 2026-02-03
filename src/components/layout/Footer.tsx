@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Instagram, Facebook, Twitter } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -36,12 +37,21 @@ export default function Footer() {
             <ul className="space-y-3 font-sans">
               {['Home', 'Collections', 'About Us', 'Contact'].map((link) => (
                 <li key={link}>
-                  <a 
-                    href="#" 
-                    className="text-background/70 hover:text-primary transition-colors"
-                  >
-                    {link}
-                  </a>
+                  {link === 'Collections' ? (
+                    <Link 
+                      to="/collections"
+                      className="text-background/70 hover:text-primary transition-colors"
+                    >
+                      {link}
+                    </Link>
+                  ) : (
+                    <a 
+                      href="#" 
+                      className="text-background/70 hover:text-primary transition-colors"
+                    >
+                      {link}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>
