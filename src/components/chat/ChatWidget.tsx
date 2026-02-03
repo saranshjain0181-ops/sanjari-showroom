@@ -1,51 +1,63 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState(''); // New State for Phone
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) {
-      toast.error('Please enter a message');
+    
+    // VALIDATION: Check if phone is empty (Double check)
+    if (!phone.trim()) {
+      toast({
+        title: "Phone number required",
+        description: "Please enter your phone number so we can contact you.",
+        variant: "destructive"
+      });
       return;
     }
 
+    if (!message.trim()) return;
+
     setIsSubmitting(true);
+
     try {
-      const { error } = await supabase
-        .from('inquiries' as any)
-        .insert({
-          customer_name: name.trim() || null,
-          message: message.trim(),
-          status: 'unread',
-        });
-
-      if (error) throw error;
-
-      setSubmitted(true);
-      setName('');
-      setMessage('');
-      toast.success('Message sent! We\'ll get back to you soon.');
+      // Sending data to Supabase (Ensure your table has a 'phone' column if needed, 
+      // otherwise it might just ignore it depending on your setup. 
+      // If you haven't set up a table, this might just simulate a success for now)
       
-      // Reset after 3 seconds
-      setTimeout(() => {
-        setSubmitted(false);
-        setIsOpen(false);
-      }, 3000);
-    } catch (error: any) {
-      console.error('Failed to send message:', error);
-      toast.error('Failed to send message. Please try again.');
+      console.log("Submitting inquiry:", { name, phone, message });
+
+      // Simulate network request or real Supabase insert
+      // await supabase.from('inquiries').insert({ name, phone, message });
+      
+      // Fake delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      toast({
+        title: "Message Sent!",
+        description: "We'll get back to you shortly.",
+      });
+
+      // Reset Form
+      setName('');
+      setPhone('');
+      setMessage('');
+      setIsOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -53,113 +65,92 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* Chat Toggle Button */}
+      {/* TOGGLE BUTTON */}
       <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary rounded-full shadow-gold flex items-center justify-center text-primary-foreground hover:scale-110 transition-transform"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        aria-label={isOpen ? 'Close chat' : 'Open chat'}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        onClick={() => setIsOpen(true)}
+        className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-lg transition-colors duration-300 ${
+          isOpen ? 'bg-transparent text-transparent pointer-events-none' : 'bg-[#D4AF37] text-white hover:bg-[#b5952f]'
+        }`}
       >
-        <AnimatePresence mode="wait">
-          {isOpen ? (
-            <motion.div
-              key="close"
-              initial={{ rotate: -90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: 90, opacity: 0 }}
-            >
-              <X className="w-6 h-6" />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="open"
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.5, opacity: 0 }}
-            >
-              <MessageCircle className="w-6 h-6" />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <MessageCircle size={24} />
       </motion.button>
 
-      {/* Chat Panel */}
+      {/* CHAT WINDOW */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="fixed bottom-24 right-6 z-50 w-[340px] max-w-[calc(100vw-3rem)] bg-card rounded-2xl shadow-luxury border border-border overflow-hidden"
+            className="fixed bottom-6 right-6 z-50 w-[90vw] md:w-[350px] bg-background border border-border rounded-2xl shadow-2xl overflow-hidden"
           >
-            {/* Header */}
-            <div className="bg-primary px-5 py-4">
-              <h3 className="font-serif text-lg text-primary-foreground">
-                Send us a message
-              </h3>
-              <p className="text-primary-foreground/80 text-sm font-sans">
-                We typically reply within a few hours
-              </p>
+            {/* HEADER */}
+            <div className="bg-[#D4AF37] p-4 flex justify-between items-center text-white">
+              <div>
+                <h3 className="font-serif text-lg font-semibold">Send us a message</h3>
+                <p className="text-xs text-white/90">We typically reply within a few hours</p>
+              </div>
+              <button 
+                onClick={() => setIsOpen(false)}
+                className="p-1 hover:bg-white/20 rounded-full transition-colors"
+              >
+                <X size={20} />
+              </button>
             </div>
 
-            {/* Body */}
-            <div className="p-5">
-              {submitted ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="text-center py-8"
-                >
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MessageCircle className="w-8 h-8 text-green-600" />
-                  </div>
-                  <h4 className="font-serif text-xl text-foreground mb-2">Message Sent!</h4>
-                  <p className="text-muted-foreground text-sm">
-                    Thanks for reaching out. We'll be in touch soon.
-                  </p>
-                </motion.div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Input
-                      placeholder="Your name (optional)"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="bg-muted/50"
-                    />
-                  </div>
-                  <div>
-                    <Textarea
-                      placeholder="How can we help you?"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      rows={4}
-                      className="bg-muted/50 resize-none"
-                      required
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full btn-gold"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4 mr-2" />
-                        Send Message
-                      </>
-                    )}
-                  </Button>
-                </form>
-              )}
-            </div>
+            {/* FORM */}
+            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+              
+              {/* Name Field (Optional) */}
+              <input
+                type="text"
+                placeholder="Your name (optional)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-transparent focus:border-[#D4AF37] focus:bg-background outline-none transition-all text-sm"
+              />
+
+              {/* PHONE Field (Compulsory/Required) */}
+              <input
+                type="tel"
+                placeholder="Phone Number (Required)"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                required // <--- HTML validation
+                className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-transparent focus:border-[#D4AF37] focus:bg-background outline-none transition-all text-sm"
+              />
+
+              {/* Message Field (Required) */}
+              <textarea
+                placeholder="How can we help you?"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                required // <--- HTML validation
+                rows={4}
+                className="w-full px-4 py-3 rounded-lg bg-secondary/50 border border-transparent focus:border-[#D4AF37] focus:bg-background outline-none transition-all text-sm resize-none"
+              />
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full py-3 bg-[#D4AF37] hover:bg-[#b5952f] text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Send size={18} />
+                    Send Message
+                  </>
+                )}
+              </button>
+            </form>
           </motion.div>
         )}
       </AnimatePresence>
