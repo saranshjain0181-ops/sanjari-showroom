@@ -1,32 +1,13 @@
 import { useState, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
-import { Volume2, VolumeX, Play, Pause } from 'lucide-react';
+import { Volume2, VolumeX, Play, Pause, Loader2 } from 'lucide-react';
 
-// Sample data (You can add more or fetch from Supabase if you prefer)
-const arrivals = [
-  {
-    id: 1,
-    title: "Summer Collection Launch",
-    src: "https://player.vimeo.com/external/459389137.sd.mp4?s=964dc90264fb8ba390c80059180fb42153588260&profile_id=164&oauth2_token_id=57447761",
-    thumbnail: "/lovable-uploads/9c508856-2401-4e18-9c44-a1bb4556906e.png"
-  },
-  {
-    id: 2,
-    title: "Signature Saree Draping",
-    src: "https://player.vimeo.com/external/459389952.sd.mp4?s=256245f90703c8112e7143d70781332360e227e7&profile_id=164&oauth2_token_id=57447761",
-    thumbnail: "/lovable-uploads/b589535e-5939-476a-a59d-7e045623a90d.png"
-  },
-  {
-    id: 3,
-    title: "Behind the Scenes",
-    src: "https://player.vimeo.com/external/459390347.sd.mp4?s=6a9690f9038304196340c46014432398c7929184&profile_id=164&oauth2_token_id=57447761",
-    thumbnail: "/lovable-uploads/a4b03850-121e-4638-b818-a679dc205309.png"
-  }
-];
-
+// --- COMPONENT: Individual Video Card ---
 const VideoCard = ({ video, index }: { video: any, index: number }) => {
   const [isMuted, setIsMuted] = useState(true);
-  const [isPlaying, setIsPlaying] = useState(false); // Start paused so user uses the button
+  const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const toggleMute = (e: React.MouseEvent) => {
@@ -58,15 +39,16 @@ const VideoCard = ({ video, index }: { video: any, index: number }) => {
       className="flex flex-col gap-4"
     >
       {/* Video Container */}
-      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 group">
+      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 group shadow-lg">
         <video
           ref={videoRef}
-          src={video.src}
+          // CONNECTED TO DATABASE: Uses 'video_url' from your upload
+          src={video.video_url} 
+          poster={video.thumbnail_url || undefined}
           className="w-full h-full object-cover"
           muted={isMuted}
           playsInline
           loop
-          // Optional: Auto-play on hover if you prefer, currently manual via button
         />
 
         {/* 1. VOLUME BUTTON (Top Right) */}
@@ -95,23 +77,55 @@ const VideoCard = ({ video, index }: { video: any, index: number }) => {
 
       {/* 3. NAME BELOW (Just below the video) */}
       <div className="text-center">
-        <h3 className="font-serif text-xl text-foreground">{video.title}</h3>
+        <h3 className="font-serif text-xl text-foreground capitalize">
+          {video.title}
+        </h3>
       </div>
     </motion.div>
   );
 };
 
+// --- MAIN COMPONENT: Fetches Data from Supabase ---
 export default function NewArrivals() {
+  // FETCHING LOGIC: Connects to your 'content_videos' table
+  const { data: videos, isLoading } = useQuery({
+    queryKey: ['new-arrivals'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('content_videos')
+        .select('*')
+        .order('created_at', { ascending: false }); // Show newest uploads first
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Loading State
+  if (isLoading) {
+    return (
+      <div className="py-20 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If you haven't uploaded videos, hide this section
+  if (!videos || videos.length === 0) return null;
+
   return (
     <section className="py-16 bg-background">
       <div className="container mx-auto px-4">
+        
+        {/* Section Title */}
         <div className="text-center mb-12">
           <h2 className="font-serif text-4xl text-foreground">New Arrivals</h2>
           <div className="divider-warm w-24 mx-auto mt-4" />
         </div>
 
+        {/* Dynamic Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {arrivals.map((video, index) => (
+          {videos.map((video, index) => (
             <VideoCard key={video.id} video={video} index={index} />
           ))}
         </div>
