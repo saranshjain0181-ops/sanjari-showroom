@@ -14,21 +14,18 @@ export default function VideoShowcase() {
 
   return (
     <section className="w-full h-screen bg-black relative overflow-hidden">
-      {/* THE BIG VIDEO (Replaced with your Vimeo Link) */}
+      {/* YOUR CUSTOM VIDEO */}
       <video
         ref={videoRef}
         autoPlay
         muted={isMuted}
         loop
         playsInline
-        // h-screen forces it to be the full height of your monitor/phone
+        // h-screen forces it to fill the ENTIRE screen (Cinematic)
         className="w-full h-screen object-cover"
       >
-        {/* Using the high-quality Vimeo link from your previous collection */}
-        <source 
-          src="https://player.vimeo.com/external/459389137.sd.mp4?s=964dc90264fb8ba390c80059180fb42153588260&profile_id=164&oauth2_token_id=57447761" 
-          type="video/mp4" 
-        />
+        {/* Linking to the file you added in the public folder */}
+        <source src="/Clothing_Brand_Video_Generation.mp4" type="video/mp4" />
       </video>
 
       {/* VOLUME BUTTON */}
@@ -40,8 +37,8 @@ export default function VideoShowcase() {
         {isMuted ? <VolumeX size={28} /> : <Volume2 size={28} />}
       </button>
       
-      {/* Gradient Overlay (Optional: Makes the video fade into the next section slightly) */}
-      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+      {/* Optional: Dark gradient at bottom to make the button visible */}
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
     </section>
   );
 }
