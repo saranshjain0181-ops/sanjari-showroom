@@ -1,9 +1,8 @@
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import HeroSection from '@/components/hero/HeroSection';
-import VideoShowcase from '@/components/sections/VideoShowcase'; // <--- RESTORED
-import VideoReels from '@/components/sections/VideoReels';       // <--- RESTORED
-import NewArrivals from '@/components/sections/NewArrivals';     // <--- NEW DYNAMIC SECTION
+import VideoShowcase from '@/components/sections/VideoShowcase'; // <--- The fixed section
+import VideoReels from '@/components/sections/VideoReels';       // <--- Your reels
 import ProductGrid from '@/components/sections/ProductGrid';
 import ContactSection from '@/components/sections/ContactSection';
 import Footer from '@/components/layout/Footer';
@@ -24,14 +23,13 @@ const Index = () => {
       <FloatingNav />
       <HeroSection />
       
-      {/* 1. Your original video section (The one you wanted to keep) */}
+      {/* 1. Visual Stories (Now with working Volume Buttons) */}
       <VideoShowcase />
       
-      {/* 2. Your original reels section */}
+      {/* 2. Video Reels (Kept exactly as before) */}
       <VideoReels />
       
-      {/* 3. The NEW dynamic section (Only shows videos you upload in Admin) */}
-      <NewArrivals />
+      {/* Note: The 'NewArrivals' section is intentionally removed */}
       
       <ProductGrid />
       <ContactSection />
