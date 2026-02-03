@@ -2,7 +2,6 @@ import { motion } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, ShoppingBag, MapPin, User, Info } from 'lucide-react';
 
-
 const navItems = [
   { name: 'Home', path: '/', icon: Home },
   { name: 'Collections', path: '/collections', icon: ShoppingBag },
@@ -36,8 +35,7 @@ export default function FloatingNav() {
 
   return (
     <>
-      {/* 1. NEW TOP-LEFT 'ABOUT US' BUTTON */}
-      {/* This sits separately in the top-left corner */}
+      {/* 1. TOP-LEFT 'ABOUT US' BUTTON */}
       <motion.div
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
@@ -53,12 +51,14 @@ export default function FloatingNav() {
         </Link>
       </motion.div>
 
-      {/* 2. EXISTING BOTTOM NAVIGATION */}
+      {/* 2. BOTTOM NAVIGATION (Fixed Centering) */}
       <motion.nav
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
+        // FIX: Force x to -50% in the animation so it stays centered
+        initial={{ y: 100, x: "-50%", opacity: 0 }}
+        animate={{ y: 0, x: "-50%", opacity: 1 }}
         transition={{ delay: 1, duration: 0.5 }}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+        // Removed '-translate-x-1/2' from className because we handle it in 'animate' above
+        className="fixed bottom-6 left-1/2 z-50"
       >
         <div className="glass-nav px-2 py-2 rounded-full shadow-luxury-lg">
           <ul className="flex items-center gap-1">
