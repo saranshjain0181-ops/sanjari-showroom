@@ -1,35 +1,41 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Eye, Filter } from 'lucide-react';
+import { Eye, Filter, Loader2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import FloatingNav from '@/components/navigation/FloatingNav';
 import Footer from '@/components/layout/Footer';
 import { useState } from 'react';
 
-const categories = ['All', 'T-shirts', 'Shirts', 'Jeans', 'Hoodies', 'Jackets', 'Sherwanis'];
-
-const allProducts = [
-  { id: 1, name: 'Classic Cotton Tee', category: 'T-shirts', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=700&fit=crop' },
-  { id: 2, name: 'Premium Sherwani', category: 'Sherwanis', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&h=650&fit=crop' },
-  { id: 3, name: 'Slim Fit Denim', category: 'Jeans', image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=500&h=800&fit=crop' },
-  { id: 4, name: 'Casual Oxford Shirt', category: 'Shirts', image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&h=600&fit=crop' },
-  { id: 5, name: 'Urban Hoodie', category: 'Hoodies', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500&h=750&fit=crop' },
-  { id: 6, name: 'Leather Jacket', category: 'Jackets', image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500&h=700&fit=crop' },
-  { id: 7, name: 'Designer Sherwani', category: 'Sherwanis', image: 'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=500&h=850&fit=crop' },
-  { id: 8, name: 'Graphic Print Tee', category: 'T-shirts', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&h=600&fit=crop' },
-  { id: 9, name: 'Bomber Jacket', category: 'Jackets', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=500&h=500&fit=crop' },
-];
+const CATEGORIES = ['All', 'T-shirts', 'Shirts', 'Jeans', 'Hoodies', 'Jackets', 'Sherwanis'];
 
 export default function Collections() {
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  const filteredProducts = selectedCategory === 'All'
-    ? allProducts
-    : allProducts.filter(p => p.category === selectedCategory);
+  // Fetch real products from Supabase
+  const { data: products, isLoading } = useQuery({
+    queryKey: ['all-products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Filter products by category (case-insensitive)
+  const filteredProducts = products?.filter((product) => {
+    if (selectedCategory === 'All') return true;
+    return product.category?.toLowerCase() === selectedCategory.toLowerCase();
+  });
 
   return (
     <div className="min-h-screen bg-background">
       <FloatingNav />
-      
+
       {/* Header */}
       <section className="pt-24 pb-12 bg-secondary">
         <div className="container mx-auto px-4">
@@ -53,7 +59,7 @@ export default function Collections() {
         <div className="container mx-auto px-4">
           <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide">
             <Filter className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-            {categories.map((category) => (
+            {CATEGORIES.map((category) => (
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
@@ -75,8 +81,25 @@ export default function Collections() {
       {/* Products Grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex justify-center py-20">
+              <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!isLoading && filteredProducts?.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-muted-foreground font-sans text-lg">
+                No products found in "{selectedCategory}".
+              </p>
+            </div>
+          )}
+
+          {/* Product Grid */}
           <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-            {filteredProducts.map((product, index) => (
+            {filteredProducts?.map((product, index) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -84,16 +107,22 @@ export default function Collections() {
                 transition={{ duration: 0.4, delay: index * 0.05 }}
                 className="break-inside-avoid"
               >
-                <div className="product-card group">
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    
-                    <div className="absolute inset-0 bg-jet/0 group-hover:bg-jet/30 transition-colors duration-300" />
-                    
+                <div className="product-card group bg-card rounded-xl overflow-hidden shadow-sm hover:shadow-luxury transition-all duration-500">
+                  <div className="relative overflow-hidden aspect-[3/4]">
+                    {product.image_url ? (
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted flex items-center justify-center text-muted-foreground">
+                        No Image
+                      </div>
+                    )}
+
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <Link
                         to={`/product/${product.id}`}
@@ -104,24 +133,23 @@ export default function Collections() {
                       </Link>
                     </div>
 
-                    <span className="absolute top-4 left-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider">
+                    <span className="absolute top-4 left-4 bg-primary/90 backdrop-blur-md text-primary-foreground px-3 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider shadow-sm">
                       {product.category}
                     </span>
                   </div>
 
-                  <div className="p-5">
-                    <h3 className="font-serif text-xl text-foreground mb-3">
+                  <div className="p-5 text-center">
+                    <h3 className="font-serif text-xl text-foreground mb-2 group-hover:text-primary transition-colors">
                       {product.name}
                     </h3>
-                    <Link
-                      to={`/product/${product.id}`}
-                      className="inline-flex items-center gap-2 text-primary font-sans font-semibold text-sm hover:gap-3 transition-all"
-                    >
-                      View Details
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                    </Link>
+                    {product.price && (
+                      <p className="text-primary font-sans font-semibold text-lg mb-1">
+                        ₹{product.price.toLocaleString('en-IN')}
+                      </p>
+                    )}
+                    <p className="text-muted-foreground font-sans text-sm">
+                      {product.material || product.category}
+                    </p>
                   </div>
                 </div>
               </motion.div>
