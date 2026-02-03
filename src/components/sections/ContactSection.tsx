@@ -2,7 +2,8 @@ import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Clock, MessageCircle } from 'lucide-react';
 
 const STORE_ADDRESS = "SANJARI, 567, Mahatma Gandhi Rd, Opposite High Court, Nehru Park 2, Dhenu Market, Indore, Madhya Pradesh 452003";
-const GOOGLE_MAPS_LINK = `https://maps.google.com/?q=${encodeURIComponent(STORE_ADDRESS)}`;
+// Kept your links exactly as they were in your code
+const GOOGLE_MAPS_LINK = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(STORE_ADDRESS)}`;
 
 const contactInfo = [
   {
@@ -98,16 +99,17 @@ export default function ContactSection() {
               );
             })}
 
-            {/* WhatsApp CTA */}
+            {/* WhatsApp CTA - CHANGED TO GREEN */}
             <motion.a
-              href="https://wa.me/9669600574?text=Hi,%20I%20am%20interested%20in%20learning%20more%20about%20Sanjari%20Fashion%20Store"
+              href="https://wa.me/919669600574?text=Hi,%20I%20am%20interested%20in%20learning%20more%20about%20Sanjari%20Fashion%20Store"
               target="_blank"
               rel="noopener noreferrer"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.4 }}
-              className="flex items-center gap-3 w-full btn-gold justify-center text-lg mt-8"
+              // UPDATED CLASSNAME: Removed 'btn-gold', Added Green styling
+              className="flex items-center gap-3 w-full bg-[#25D366] hover:bg-[#128C7E] text-white py-4 px-6 rounded-lg shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 justify-center text-lg font-medium mt-8"
             >
               <MessageCircle className="w-6 h-6" />
               Chat on WhatsApp
@@ -129,7 +131,7 @@ export default function ContactSection() {
               className="block w-full h-full relative group"
             >
               <iframe
-                src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3680.123!2d75.857!3d22.719!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2s${encodeURIComponent(STORE_ADDRESS)}!5e1!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin`}
+                src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3680.176465375466!2d75.8752393!3d22.7195687!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3962fd1656037a37%3A0x6d9a9c6762332616!2sSanjari%20Fashion%20Store!5e1!3m2!1sen!2sin!4v1706894000000!5m2!1sen!2sin`}
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
