@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Suspense } from 'react';
+import { Link } from 'react-router-dom';
 import InteractiveCoin from '../3d/InteractiveCoin';
 import heroImage from '@/assets/hero-store.jpg';
 
@@ -73,8 +74,8 @@ export default function HeroSection() {
           transition={{ duration: 0.8, delay: 0.8 }}
           className="mt-8"
         >
-          <a
-            href="#collections"
+          <Link
+            to="/collections"
             className="btn-gold inline-flex items-center gap-2 text-lg font-sans"
           >
             Explore Collections
@@ -88,10 +89,10 @@ export default function HeroSection() {
                 strokeLinecap="round" 
                 strokeLinejoin="round" 
                 strokeWidth={2} 
-                d="M19 9l-7 7-7-7" 
+                d="M17 8l4 4m0 0l-4 4m4-4H3" 
               />
             </svg>
-          </a>
+          </Link>
         </motion.div>
 
         {/* Scroll Indicator */}

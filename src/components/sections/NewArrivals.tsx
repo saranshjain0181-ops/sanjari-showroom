@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { Volume2, VolumeX, Play, Pause, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // --- VIDEO CARD COMPONENT ---
 const VideoCard = ({ video, index }: { video: any, index: number }) => {
@@ -172,9 +173,12 @@ export default function NewArrivals() {
 
         {/* Bottom Spacing Element */}
         <div className="mt-24 text-center">
-           <button className="px-8 py-3 border border-foreground/20 hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300 uppercase tracking-widest text-xs font-semibold">
-              View All Collections
-           </button>
+           <Link
+             to="/videos"
+             className="px-8 py-3 border border-foreground/20 hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300 uppercase tracking-widest text-xs font-semibold inline-block"
+           >
+              See More
+           </Link>
         </div>
       </div>
     </section>
