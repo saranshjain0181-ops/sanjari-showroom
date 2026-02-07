@@ -307,8 +307,9 @@ export default function ProductDetail() {
 
                 {/* Store Info */}
                 <div className="mt-8 pt-6 border-t border-border">
+                  {/* UPDATED ADDRESS HERE */}
                   <p className="text-muted-foreground font-sans text-sm text-center">
-                    📍 123 MG Road, Indore • Open Mon-Sat, 10AM - 9PM
+                    📍 567, Mahatma Gandhi Rd, Opp. High Court, Indore • Open Mon-Sat, 10AM - 9PM
                   </p>
                 </div>
               </div>
