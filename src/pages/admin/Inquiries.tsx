@@ -6,6 +6,7 @@ import { ArrowLeft, Mail, Clock, Trash2, CheckCircle, Phone } from 'lucide-react
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
+
 interface Inquiry {
   id: string;
   customer_name: string | null;
