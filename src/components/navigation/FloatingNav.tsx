@@ -13,6 +13,9 @@ export default function FloatingNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
+  // CHECK: Is this a product detail page?
+  const isProductPage = location.pathname.includes('/product');
+
   const handleNavClick = (item: typeof navItems[0], e: React.MouseEvent) => {
     if (item.isAnchor) {
       e.preventDefault();
@@ -36,20 +39,23 @@ export default function FloatingNav() {
   return (
     <>
       {/* 1. TOP-LEFT 'ABOUT US' BUTTON */}
-      <motion.div
-        initial={{ opacity: 0, x: -50 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-        className="fixed top-6 left-6 z-50"
-      >
-        <Link 
-          to="/about"
-          className="flex items-center gap-2 px-5 py-2.5 bg-black/80 hover:bg-black text-white text-xs font-semibold tracking-widest uppercase rounded-full transition-all duration-300 shadow-lg hover:scale-105 border border-white/10"
+      {/* LOGIC: Only show if NOT on a product page */}
+      {!isProductPage && (
+        <motion.div
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+          className="fixed top-6 left-6 z-50"
         >
-          <Info size={14} />
-          About Us
-        </Link>
-      </motion.div>
+          <Link 
+            to="/about"
+            className="flex items-center gap-2 px-5 py-2.5 bg-black/80 hover:bg-black text-white text-xs font-semibold tracking-widest uppercase rounded-full transition-all duration-300 shadow-lg hover:scale-105 border border-white/10"
+          >
+            <Info size={14} />
+            About Us
+          </Link>
+        </motion.div>
+      )}
 
       {/* 2. BOTTOM NAVIGATION (Fixed Centering) */}
       <motion.nav
