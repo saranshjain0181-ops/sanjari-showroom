@@ -2,14 +2,14 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Mail, Clock, Trash2, CheckCircle, Phone } from 'lucide-react'; // Added Phone icon
+import { ArrowLeft, Mail, Clock, Trash2, CheckCircle, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
 interface Inquiry {
   id: string;
   customer_name: string | null;
-  phone?: string | null; // Added phone field
+  phone?: string | null;
   message: string;
   status: string;
   created_at: string;
@@ -18,6 +18,28 @@ interface Inquiry {
 export default function Inquiries() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // --- NEW: Helper function to format date to Indian Standard Time (IST) ---
+  const formatIndianDate = (dateString: string) => {
+    const date = new Date(dateString);
+    
+    // 1. Get Date Parts in IST
+    const day = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: '2-digit' });
+    const month = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', month: '2-digit' });
+    const year = date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', year: 'numeric' });
+    
+    // 2. Get Time Parts in IST
+    const time = date.toLocaleString('en-IN', { 
+      timeZone: 'Asia/Kolkata', 
+      hour: '2-digit', 
+      minute: '2-digit', 
+      hour12: true 
+    });
+
+    // 3. Combine in dd-mm-yyyy format
+    return `${day}-${month}-${year} at ${time}`; 
+  };
+  // -------------------------------------------------------------------------
 
   // 1. Fetch Inquiries
   const { data: inquiries, isLoading } = useQuery({
@@ -97,13 +119,14 @@ export default function Inquiries() {
                       <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider">New</span>
                     )}
                   </div>
+                  {/* UPDATED DATE DISPLAY */}
                   <div className="text-xs text-muted-foreground flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    {new Date(msg.created_at).toLocaleDateString()}
+                    {formatIndianDate(msg.created_at)}
                   </div>
                 </div>
 
-                {/* --- NEW: PHONE NUMBER SECTION --- */}
+                {/* Phone Number Section */}
                 {msg.phone && (
                   <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
                     <Phone className="w-4 h-4 text-primary/70" />
@@ -115,7 +138,6 @@ export default function Inquiries() {
                     </a>
                   </div>
                 )}
-                {/* -------------------------------- */}
 
                 <p className="text-foreground bg-muted/30 p-4 rounded-lg text-sm leading-relaxed mb-4">
                   {msg.message}
