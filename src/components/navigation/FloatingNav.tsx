@@ -39,7 +39,7 @@ export default function FloatingNav() {
   return (
     <>
       {/* 1. TOP-LEFT 'ABOUT US' BUTTON */}
-      {/* LOGIC: Only show if NOT on a product page */}
+      {/* LOGIC: Only show if NOT on a product page, so it doesn't overlap 'Back' button */}
       {!isProductPage && (
         <motion.div
           initial={{ opacity: 0, x: -50 }}
